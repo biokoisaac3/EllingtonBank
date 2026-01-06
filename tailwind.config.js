@@ -5,21 +5,27 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        rubik: ["Rubik-Regular", "sans-serif"],
-        "rubik-bold": ["Rubik-Bold", "sans-serif"],
-        "rubik-extrabold": ["Rubik-ExtraBold", "sans-serif"],
-        "rubik-medium": ["Rubik-Medium", "sans-serif"],
-        "rubik-semibold": ["Rubik-SemiBold", "sans-serif"],
-        "rubik-light": ["Rubik-Light", "sans-serif"],
+        outfit: ["Outfit", "sans-serif"],
+        "outfit-medium": ["OutfitMedium", "sans-serif"],
+        "outfit-bold": ["OutfitBold", "sans-serif"],
       },
+
       colors: {
         primary: {
-          100: "#0061FF0A",
-          200: "#0061FF1A",
-          300: "#0061FF",
+          100: "#3F401B",
+          200: "#969841",
+          300: "#63642A",
+          400: "#4a4b20",
+          500: "#E8E8E80D",
+          600: "#555625",
         },
         accent: {
-          100: "#FBFBFD",
+          100: "#D1D1D1",
+          200: "#8C8C8C",
+        },
+        green: {
+          100: "#21D1841A",
+          200: "#21D184",
         },
         black: {
           DEFAULT: "#000000",
@@ -27,7 +33,9 @@ module.exports = {
           200: "#666876",
           300: "#191D31",
         },
-        danger: "#F75555",
+        error: "#D20202",
+        white: "#FFFFFF",
+        yellow: "#FBCD58",
       },
     },
   },
