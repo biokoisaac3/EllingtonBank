@@ -159,24 +159,19 @@ export default function TransferScreen() {
     }
   };
 
-  const handleBankSelect = (bank: string) => {
-    setSelectedBank(bank);
-    console.log(bank);
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      const selectedBankObj = banks?.find((b) => b.name === bank);
-      const bankCode = selectedBankObj?.code || "";
-      router.push({
-        pathname: "/(root)/transfer/details",
-        params: {
-          accountNumber,
-          bank,
-          bankCode,
-        },
-      });
-    }, 1500);
-  };
+const handleBankSelect = (bank: string) => {
+  setSelectedBank(bank);
+  const selectedBankObj = banks?.find((b) => b.name === bank);
+  const bankCode = selectedBankObj?.code || "";
+  router.push({
+    pathname: "/(root)/transfer/details",
+    params: {
+      accountNumber,
+      bank,
+      bankCode,
+    },
+  });
+};
 
   const handleRetryBeneficiaries = () => {
     dispatch(fetchBeneficiaries());

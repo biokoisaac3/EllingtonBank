@@ -28,7 +28,7 @@ const EmailOtpScreen = () => {
   const handleBack = () => router.back();
 
   const validateEmail = (email: string) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    email.includes("@") && email.includes(".");
 
   const handleEmailChange = (text: string) => {
     setEmail(text);
@@ -42,10 +42,6 @@ const EmailOtpScreen = () => {
       setEmailError("Email is required");
       return;
     }
-    if (!validateEmail(email)) {
-      setEmailError("Please enter a valid email");
-      return;
-    }
 
     setIsLoading(true);
     try {
@@ -54,8 +50,9 @@ const EmailOtpScreen = () => {
         pathname: "/(auth)/verify-forget-password",
         params: { email },
       });
-      console.log(resultAction)
     } catch (error: any) {
+      console.log(error);
+      setEmailError(error || "Unable to send reset email");
     } finally {
       setIsLoading(false);
     }
