@@ -16,7 +16,7 @@
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true,
           "NSExceptionDomains": {
-            "3.220.216.48:3005": {
+            "35.174.195.146:3005": {
               "NSExceptionAllowsInsecureHTTPLoads": true
             }
           }

@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../lib/store"; // Adjust the import path to your store file where AppDispatch is exported
+import type { AppDispatch } from "../lib/store"; 
 import { logoutUser } from "../lib/thunks/authThunks";
 import { useRouter } from "expo-router";
 

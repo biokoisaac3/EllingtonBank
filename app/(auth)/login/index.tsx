@@ -5,7 +5,6 @@ import {
   View,
   ImageBackground,
   Image,
-  TouchableOpacity,
   TouchableWithoutFeedback,
   Keyboard,
   ScrollView,
@@ -24,16 +23,18 @@ import { useAppSelector } from "@/app/lib/hooks/useAppSelector";
 import CustomText from "@/app/components/CustomText";
 import images from "@/app/assets/images";
 import { loginUser } from "@/app/lib/thunks/authThunks";
+import { clearError } from "@/app/lib/slices/authSlice";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
   const [pin, setPin] = useState("");
+  const [email, setEmail] = useState("");
   const [inputFocused, setInputFocused] = useState(false);
+
   const router = useRouter();
   const dispatch = useAppDispatch();
+
   const { isLoading, error, isAuthenticated, requiresPasscodeSetup } =
     useAppSelector((state) => state.auth);
-  console.log(error);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -46,9 +47,7 @@ const Login = () => {
   }, [isAuthenticated, requiresPasscodeSetup]);
 
   const handleLogin = async () => {
-    if (!email || !pin) {
-      return;
-    }
+    if (!email || !pin) return;
 
     await dispatch(
       loginUser({
@@ -58,12 +57,26 @@ const Login = () => {
     );
   };
 
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    if (error) {
+      dispatch(clearError());
+    }
+  };
+
+  const handlePinChange = (value: string) => {
+    setPin(value);
+    if (error) {
+      dispatch(clearError());
+    }
+  };
+
   return (
-    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-      <SafeAreaView className="flex-1 bg-primary-100 ">
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <SafeAreaView className="flex-1 bg-primary-100">
         <KeyboardAvoidingView behavior="padding" className="flex-1">
           <ScrollView
-            className="flex-1 "
+            className="flex-1"
             contentContainerStyle={{
               flexGrow: 1,
               paddingHorizontal: 16,
@@ -97,33 +110,31 @@ const Login = () => {
               </View>
             </View>
 
-            <View className="w-full ">
-              <Text className="text-white text-lg font-semibold mb-5"></Text>
-              <CustomText weight="bold" className=" mb-4" size="lg">
+            <View className="w-full">
+              <CustomText weight="bold" className="mb-4" size="lg">
                 Login to your account
               </CustomText>
 
               <TextInputField
                 label="Email"
                 placeholder="Enter your email address"
-                onChangeText={setEmail}
                 value={email}
                 keyboardType="email-address"
-                autoFocus={false}
+                onChangeText={handleEmailChange}
                 onFocus={() => setInputFocused(true)}
                 onBlur={() => setInputFocused(false)}
               />
 
-              <CustomText weight="bold" className=" mb-2" size="sm" secondary>
+              <CustomText weight="bold" className="mb-2" size="sm" secondary>
                 Enter your passcode
               </CustomText>
+
               <OtpInput
                 digitCount={6}
                 value={pin}
-                onChange={setPin}
-                inputStyle="h-16  w-14 "
+                onChange={handlePinChange}
+                inputStyle="h-16 w-14"
                 secure
-                autoFocus={false}
                 onFocus={() => setInputFocused(true)}
                 onBlur={() => setInputFocused(false)}
               />
@@ -142,14 +153,12 @@ const Login = () => {
                 onPress={handleLogin}
               />
 
-              <Pressable>
-                <Text
-                  onPress={() => router.push("/(auth)/forget-password")}
-                  className="text-primary-200 text-center mt-3font-semibold text-md mt-4 "
-                >
+              <Pressable onPress={() => router.push("/(auth)/forget-password")}>
+                <Text className="text-primary-200 text-center font-semibold text-md mt-4">
                   Forgot passcode?
                 </Text>
               </Pressable>
+
               <InfoText
                 text="Don't have an account?"
                 actionText="Sign up"

@@ -34,11 +34,11 @@ export default function ServicesSection() {
       />
       <OtherServicesSection
         items={otherServices}
-        onItemPress={handleItemPress}
+        // onItemPress={handleItemPress}
       />
       <WealthManagementSection
         items={wealthManagement}
-        onItemPress={handleItemPress}
+        // onItemPress={handleItemPress}
       />
     </View>
   );

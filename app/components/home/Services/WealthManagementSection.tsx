@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Pressable, Image } from "react-native";
+import React, { useState } from "react";
+import { View, Pressable, Image, Text } from "react-native";
 import { ServiceItem } from "./types";
 import CustomText from "../../CustomText";
 
@@ -9,6 +9,20 @@ interface Props {
 }
 
 const WealthManagementSection: React.FC<Props> = ({ items, onItemPress }) => {
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const handlePress = (item: ServiceItem) => {
+    if (onItemPress) {
+      onItemPress(item); // call handler if exists
+    } else {
+      // show "Coming soon" for 1.5s
+      setActiveId(item.id);
+      setTimeout(() => {
+        setActiveId((prev) => (prev === item.id ? null : prev));
+      }, 1500);
+    }
+  };
+
   return (
     <View className="mb-6 px-4">
       <CustomText size="lg" weight="bold" className="mb-4">
@@ -17,32 +31,43 @@ const WealthManagementSection: React.FC<Props> = ({ items, onItemPress }) => {
 
       <View className="flex-row flex-wrap gap-4">
         {items.map((item) => (
-          <Pressable
+          <View
             key={item.id}
-            onPress={() => onItemPress?.(item)}
-            className="items-center mb-2"
+            className="relative items-center mb-6"
             style={{ width: "30%", aspectRatio: 1 }}
           >
-            <View
-              className="bg-primary-300 rounded-2xl items-center justify-center"
-              style={{ width: 100, height: 100 }}
+            <Pressable
+              onPress={() => handlePress(item)}
+              className="items-center mb-2"
+              style={{ width: "100%", height: "100%" }}
             >
-              <Image
-                source={item.icon}
-                style={{ width: 40, height: 40 }}
-                resizeMode="contain"
-              />
-            </View>
+              <View
+                className="bg-primary-300 rounded-2xl items-center justify-center"
+                style={{ width: 100, height: 100 }}
+              >
+                <Image
+                  source={item.icon}
+                  style={{ width: 40, height: 40 }}
+                  resizeMode="contain"
+                />
+              </View>
 
-            <CustomText
-              size="sm"
-              weight="medium"
-              className="text-center mt-2"
-              numberOfLines={2}
-            >
-              {item.label}
-            </CustomText>
-          </Pressable>
+              <CustomText
+                size="sm"
+                weight="medium"
+                className="text-center mt-2"
+                numberOfLines={2}
+              >
+                {item.label}
+              </CustomText>
+            </Pressable>
+
+            {activeId === item.id && (
+              <View className="absolute -right-1 top-1 bg-primary-200 px-2 py-1 rounded-full">
+                <Text className="text-white text-xs">Coming soon</Text>
+              </View>
+            )}
+          </View>
         ))}
       </View>
     </View>

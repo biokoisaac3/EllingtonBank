@@ -7,13 +7,13 @@ import { restoreAuth } from "../lib/thunks/authThunks";
 
 export default function AuthWrapper() {
   const dispatch = useDispatch<AppDispatch>();
-  const { isAuthenticated, user, isRestoring } = useAppSelector(
+  const { isAuthenticated, isRestoring } = useAppSelector(
     (state: RootState) => state.auth
   );
+
   const router = useRouter();
   const segments = useSegments();
-  const [mounted, setMounted] = useState(false);
-  const currentUser = user?.email;
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     dispatch(restoreAuth());
@@ -21,32 +21,21 @@ export default function AuthWrapper() {
 
   useEffect(() => {
     if (!isRestoring) {
-      setMounted(true);
+      setReady(true);
     }
   }, [isRestoring]);
 
-  // useEffect(() => {
-  //   if (mounted) {
-  //     if (!currentUser) {
-  //       router.replace("/");
-  //     // } else if (user.status === "bvn_verified") {
-  //     //   router.replace("/(auth)/facial-verification");
-  //     // } else if (user.status === "otp_verified") {
-  //     //   router.replace("/(auth)/profile-update");
-  //     } 
-  //     else if (!isAuthenticated) {
-  //       if (segments[0] !== "(auth)") {
-  //         router.replace("/(auth)/current-user");
-  //       }
-  //     } else if (isAuthenticated) {
-  //       if (segments[0] === "(auth)") {
-  //         router.replace("/(root)/(tabs)");
-  //       }
-  //     }
-  //   }
-  // }, [isAuthenticated, segments, router, mounted, currentUser]);
+  useEffect(() => {
+    if (!ready) return;
 
-  if (isRestoring) {
+    const inAuthGroup = segments[0] === "(auth)";
+
+    if (isAuthenticated && inAuthGroup) {
+      router.replace("/(root)/(tabs)");
+    }
+  }, [ready, isAuthenticated, segments, router]);
+
+  if (!ready) {
     return null;
   }
 

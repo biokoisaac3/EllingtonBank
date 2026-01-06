@@ -55,7 +55,7 @@ const HomeScreen = () => {
         avatar={user?.passport}
       />
       <ScrollView
-        className="flex-1 -mb-16"
+        className="flex-1 -mb-10"
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
