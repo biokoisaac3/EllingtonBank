@@ -202,7 +202,8 @@ export default function Card() {
             ) : (
               <CardContent
                 buttonTitle="Request virtual card"
-                buttonRoute="/(root)/cards/virtual-card"
+                buttonRoute=""
+                // buttonRoute="/(root)/cards/virtual-card"
                 sectionTitle="Why a Virtual Card?"
               />
             )

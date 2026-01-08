@@ -1,14 +1,30 @@
-import { View, Text } from "react-native";
+import { Linking, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect } from "react";
 
+const CUSTOMER_CARE_NUMBER = "2347047007086"; 
 export default function ProfileScreen() {
-  return (
-    <SafeAreaView className="flex-1 bg-primary-100">
-      <View className="flex-1 items-center justify-center">
-        <Text className="text-white text-lg font-rubik-bold">
-          Profile Screen
-        </Text>
-      </View>
-    </SafeAreaView>
-  );
+  useEffect(() => {
+    const openWhatsApp = async () => {
+      const url = `https://wa.me/${CUSTOMER_CARE_NUMBER}`;
+
+      try {
+        const canOpen = await Linking.canOpenURL(url);
+        if (canOpen) {
+          await Linking.openURL(url);
+        } else {
+          Alert.alert(
+            "WhatsApp not installed",
+            "Please install WhatsApp to contact customer care."
+          );
+        }
+      } catch (e) {
+        console.error("Failed to open WhatsApp", e);
+      }
+    };
+
+    openWhatsApp();
+  }, []);
+
+  return <SafeAreaView className="flex-1 bg-primary-100" />;
 }

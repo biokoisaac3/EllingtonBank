@@ -21,7 +21,7 @@ export default function ServicesSection() {
     if (item.id === "5") router.push("/(root)/cable-and-payment");
     if (item.id === "6") router.push("/(root)/travel-&-hotel-payment");
     if (item.id === "7") router.push("/(root)/internet");
-    if (item.id === "8") router.push("/(root)/other-bills");
+    // if (item.id === "8") router.push("/(root)/other-bills");
   };
 
 

@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
-import icons from "@/app/assets/icons/icons";
+import { svgIcons } from "@/app/assets/icons/icons";
 import Header from "@/app/components/header-back";
 import AmountCard from "@/app/components/home/cards/AmountCard";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,30 +9,39 @@ import PaymentInfoCard from "@/app/components/home/biils/PaymentInfoCard";
 import TransferSummaryCard from "@/app/components/TransferSummaryCard";
 import SenderCard from "@/app/components/home/cards/sender-card.tsx";
 import ScheduleTransaction from "@/app/components/ScheduleTransaction";
-import {
-  dayOptions,
-  frequencyOptions,
-  travelServiceItems,
-} from "@/app/lib/utils";
+import { dayOptions, frequencyOptions } from "@/app/lib/utils";
 import Button from "@/app/components/Button";
 
 export default function ConfirmTravelPayment() {
-  const { service, product, paymentRef, amount } = useLocalSearchParams();
+  const params = useLocalSearchParams();
   const router = useRouter();
+
+  const {
+    accountId,
+    amount,
+    providerId,
+    providerName,
+    providerSlug,
+    packageId,
+    packageName,
+    packageAmount,
+    packageSlug,
+  } = params;
+
   const rawAmount = Array.isArray(amount)
     ? amount[0]
     : amount?.toString() || "0";
-
   const cleanedAmountString = rawAmount.replace(/[₦,\s]/g, "");
   const normalizedAmount = Number(cleanedAmountString);
   const finalAmount = isNaN(normalizedAmount) ? 0 : normalizedAmount;
 
-  // Find the selected service item for label and icon
-  const selectedServiceItem = travelServiceItems.find(
-    (item) => item.value === (service as string)
-  );
-  const serviceLabel = selectedServiceItem?.label || "Unknown Service";
-  const providerIcon = selectedServiceItem?.icon;
+  const serviceLabel = Array.isArray(providerName)
+    ? providerName[0]
+    : providerName || "Unknown Service";
+
+  const accountIdStr = Array.isArray(accountId)
+    ? accountId[0]
+    : accountId || "";
 
   const fee = 0;
   const totalDebit = finalAmount + fee;
@@ -46,11 +55,23 @@ export default function ConfirmTravelPayment() {
 
   const handleContinue = () => {
     router.push({
-      pathname: "/(root)/travel-&-hotel-payment/authorize",
+      pathname: "/(root)/travel-&-hotel-payment/success",
       params: {
         amount: rawAmount,
-        description: "Seventy five thousand naira",
-        service,
+        accountId: accountIdStr,
+        providerId,
+        providerName,
+        providerSlug,
+        packageId,
+        packageSlug,
+        packageName,
+        packageAmount,
+        scheduleEnabled: scheduleEnabled.toString(),
+        scheduleName,
+        frequency,
+        dayOfWeek,
+        startDate,
+        endDate,
       },
     });
   };
@@ -66,13 +87,13 @@ export default function ConfirmTravelPayment() {
       >
         <AmountCard
           amount={rawAmount}
-          description="Seventy five thousand naira"
+          description={`Payment to ${serviceLabel}`}
         />
 
         <PaymentInfoCard
           provider={serviceLabel}
-          phone={Array.isArray(paymentRef) ? paymentRef[0] : paymentRef || ""}
-          icon={providerIcon}
+          phone={accountIdStr}
+          icon={svgIcons.chip}
         />
 
         <TransferSummaryCard
@@ -99,7 +120,10 @@ export default function ConfirmTravelPayment() {
           frequencyOptions={frequencyOptions}
           dayOptions={dayOptions}
         />
-        <Button title="Pay" variant="primary" onPress={handleContinue} />
+
+        <View className="mt-4">
+          <Button title="Pay" variant="primary" onPress={handleContinue} />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

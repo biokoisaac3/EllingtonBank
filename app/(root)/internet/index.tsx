@@ -7,24 +7,27 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   ScrollView,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import * as Contacts from "expo-contacts";
 
 import Header from "@/app/components/header-back";
 import Button from "@/app/components/Button";
 import TextInputField from "@/app/components/inputs/TextInputField";
 import { Dropdown } from "@/app/components/inputs/DropdownInputs";
 import BundleCard from "@/app/components/home/biils/BundleCard";
+import AmountInput from "@/app/components/inputs/AmountInput";
 import Loading from "@/app/components/Loading";
+import BottomSheet from "@/app/components/BottomSheet";
+import CustomText from "@/app/components/CustomText";
 
 import { useAppDispatch } from "@/app/lib/hooks/useAppDispatch";
 import { useAppSelector } from "@/app/lib/hooks/useAppSelector";
-import {
-  getBillerProviders,
-  getPackages,
-  validateBillCustomer,
-} from "@/app/lib/thunks/billsThunks";
+import { getBillerProviders, getPackages } from "@/app/lib/thunks/billsThunks";
+import { clearError } from "@/app/lib/slices/billsSlice";
 
 export default function InternetServicesPayment() {
   const router = useRouter();
@@ -41,14 +44,21 @@ export default function InternetServicesPayment() {
   const [selectedService, setSelectedService] = useState("");
   const [selectedProduct, setSelectedProduct] = useState("");
   const [accountId, setAccountId] = useState("");
-  const [validating, setValidating] = useState(false);
+  const [customAmount, setCustomAmount] = useState("");
 
+  // Contacts modal state
+  const [contactsVisible, setContactsVisible] = useState(false);
+  const [contacts, setContacts] = useState<Contacts.Contact[]>([]);
 
   const safeProviders = useMemo(() => providers ?? [], [providers]);
   const safePackages = useMemo(() => packages ?? [], [packages]);
 
   const isLoading =
     providersStatus === "loading" || packagesStatus === "loading";
+
+  useEffect(() => {
+    dispatch(clearError());
+  }, [dispatch]);
 
   useEffect(() => {
     dispatch(getBillerProviders({ type: "internet" })).catch(() => {});
@@ -100,47 +110,62 @@ export default function InternetServicesPayment() {
     [safePackages, selectedProduct]
   );
 
+  const hasPackageAmount = useMemo(
+    () => selectedPackageData?.amount != null && selectedPackageData.amount > 0,
+    [selectedPackageData]
+  );
+
   const amount = useMemo(() => {
-    if (selectedPackageData?.amount) {
-      return String(selectedPackageData.amount);
+    if (hasPackageAmount) {
+      return String(selectedPackageData?.amount ?? "");
     }
-    return "0";
-  }, [selectedPackageData]);
+    return customAmount.replace(/,/g, "");
+  }, [selectedPackageData, customAmount, hasPackageAmount]);
 
-  const handleContinue = async () => {
-    if (!selectedProviderData || !selectedPackageData || !accountId) return;
+  /* ---------------- Contacts Logic ---------------- */
 
-    setValidating(true);
-    try {
-      await dispatch(
-        validateBillCustomer({
-          customerId: accountId,
-          productName: selectedPackageData.slug,
-          billerSlug: selectedProviderData.slug,
-        })
-      ).unwrap(); 
-
-      router.push({
-        pathname: "/(root)/internet/confirm",
-        params: {
-          service: selectedService,
-          product: selectedProduct,
-          accountId,
-          amount,
-          providerId: String(selectedProviderData.id),
-          providerName: selectedProviderData.name,
-          providerSlug: selectedProviderData.slug,
-          packageId: String(selectedPackageData.id),
-          packageName: selectedPackageData.name,
-          packageSlug: selectedPackageData.slug,
-        },
+  const openContacts = async () => {
+    const { status } = await Contacts.requestPermissionsAsync();
+    if (status === "granted") {
+      const { data } = await Contacts.getContactsAsync({
+        fields: [Contacts.Fields.PhoneNumbers],
       });
-    } catch (error) {
-    } finally {
-      setValidating(false);
+
+      if (data.length > 0) {
+        setContacts(data);
+        setContactsVisible(true);
+      }
     }
   };
 
+  const selectContact = (contact: Contacts.Contact) => {
+    // Use name or phone as Account ID (same pattern as data page)
+    const value = contact.phoneNumbers?.[0]?.number || contact.name || "";
+    setAccountId(value);
+    setContactsVisible(false);
+  };
+
+  /* ------------------------------------------------ */
+
+  const handleContinue = () => {
+    if (!selectedProviderData || !selectedPackageData || !accountId) return;
+
+    router.push({
+      pathname: "/(root)/internet/confirm",
+      params: {
+        service: selectedService,
+        product: selectedProduct,
+        accountId,
+        amount,
+        providerId: String(selectedProviderData.id),
+        providerName: selectedProviderData.name,
+        providerSlug: selectedProviderData.slug,
+        packageId: String(selectedPackageData.id),
+        packageName: selectedPackageData.name,
+        packageSlug: selectedPackageData.slug,
+      },
+    });
+  };
 
   const isFormValid =
     accountId &&
@@ -191,19 +216,35 @@ export default function InternetServicesPayment() {
                 />
 
                 <TextInputField
-                  label="Enter Account ID/User ID"
+                  label="Enter Account ID / User ID"
                   value={accountId}
                   onChangeText={setAccountId}
-                  keyboardType="default"
-                  placeholder="Enter Account ID/User ID"
+                  placeholder="Enter Account ID / User ID"
+                  rightIcon={
+                    <Ionicons name="person-circle" size={24} color="white" />
+                  }
+                  onRightIconPress={openContacts}
                 />
 
-                {selectedPackageData?.amount && (
-                  <BundleCard price={String(selectedPackageData.amount)} />
+                {hasPackageAmount ? (
+                  <BundleCard
+                    price={String(selectedPackageData?.amount ?? "")}
+                  />
+                ) : (
+                  <View className="mb-4">
+                    <Text className="text-white/60 text-sm mb-2 pl-1">
+                      Enter Amount
+                    </Text>
+                    <AmountInput
+                      value={customAmount}
+                      onChange={setCustomAmount}
+                      placeholder="0"
+                    />
+                  </View>
                 )}
 
                 <Text className="text-white/60 text-sm italic pl-1 mt-2 mb-6">
-                  ❔ Select a bundle above ₦100
+                  ❔ {hasPackageAmount ? "Select" : "Enter"} a bundle above ₦100
                 </Text>
 
                 <View className="mt-auto pb-4">
@@ -219,6 +260,31 @@ export default function InternetServicesPayment() {
           </View>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
+
+      <BottomSheet
+        visible={contactsVisible}
+        onClose={() => setContactsVisible(false)}
+        title="Select Contact"
+        hideshowButton
+      >
+        {contacts
+          .filter((c) => c.phoneNumbers && c.phoneNumbers.length > 0)
+          .map((c, index) => {
+            const number = c.phoneNumbers?.[0]?.number;
+            if (!number) return null;
+
+            return (
+              <Pressable
+                key={index}
+                onPress={() => selectContact(c)}
+                className="py-3 border-b border-primary-400"
+              >
+                <CustomText>{c.name ?? "Unknown"}</CustomText>
+                <CustomText secondary>{number}</CustomText>
+              </Pressable>
+            );
+          })}
+      </BottomSheet>
     </SafeAreaView>
   );
 }

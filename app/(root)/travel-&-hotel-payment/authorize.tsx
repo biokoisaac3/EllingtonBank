@@ -3,54 +3,93 @@ import {
   View,
   Text,
   StatusBar,
-  TouchableOpacity,
   Vibration,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
+
 import Header from "@/app/components/header-back";
-import OtpInput from "@/app/components/inputs/OtpInput"; 
+import OtpInput from "@/app/components/inputs/OtpInput";
 import Numpad from "@/app/components/inputs/Numpad";
 
-export default function AuthorizePayment() {
+import { useAppDispatch } from "@/app/lib/hooks/useAppDispatch";
+import { payBill } from "@/app/lib/thunks/billsThunks";
+import { clearError } from "@/app/lib/slices/billsSlice";
+
+const getParam = (param?: string | string[]) =>
+  Array.isArray(param) ? param[0] : param ?? "";
+
+export default function AuthorizeInternetPayment() {
   const params = useLocalSearchParams();
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const amount = getParam(params.amount);
+  const accountId = getParam(params.accountId);
+  const packageSlug = getParam(params.packageSlug);
+  const providerSlug = getParam(params.providerSlug);
+  const providerName = getParam(params.providerName);
+  console.log(params);
   const [passcode, setPasscode] = useState("");
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleNumberPress = (num: string) => {
-    if (passcode.length < 4) {
+    if (passcode.length < 4 && !loading) {
       setPasscode((prev) => {
-        const next = prev + num;
-        setError(false);
-        return next;
+        setError(null);
+        return prev + num;
       });
     }
   };
 
   const handleDelete = () => {
-    setPasscode((prev) => prev.slice(0, -1));
-    setError(false);
+    if (!loading) {
+      setPasscode((prev) => prev.slice(0, -1));
+      setError(null);
+    }
   };
 
   useEffect(() => {
     if (passcode.length === 4) {
-      const t = setTimeout(() => {
-        if (passcode === "1234") {
-          router.push({
-            pathname: "/(root)/travel-&-hotel-payment/success",
-            params: params,
-          });
-        } else {
-          setError(true);
-          Vibration.vibrate(400);
-          setPasscode("");
-        }
-      }, 300);
-
-      return () => clearTimeout(t);
+      handlePay();
     }
   }, [passcode]);
+
+  const handlePay = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const payload = {
+        type: "cable",
+        provider: providerSlug,
+        amount: Number(amount),
+        bundleSlug: packageSlug,
+        customerId: accountId,
+        transactionPin: passcode,
+      };
+      const result = await dispatch(payBill(payload)).unwrap();
+      dispatch(clearError());
+
+      router.replace({
+        pathname: "/(root)/travel-&-hotel-payment/success",
+        params: {
+          ...params,
+          reference: result?.reference,
+          status: "success",
+        },
+      });
+    } catch (err: any) {
+      setError(
+        err || "Service not available at this time, please try again later"
+      );
+      Vibration.vibrate(400);
+      setPasscode("");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-primary-100">
@@ -60,24 +99,30 @@ export default function AuthorizePayment() {
 
       <View className="flex-1 justify-between px-6 pb-12">
         <View className="mt-12">
-          <Text className="text-white text-base mb-8">Enter your Pin</Text>
+          <Text className="text-white text-base mb-8">
+            Enter your transaction PIN
+          </Text>
 
           <OtpInput
             digitCount={4}
             value={passcode}
             onChange={(value) => {
-              setPasscode(value.slice(0, 4));
-              setError(false);
+              if (!loading) {
+                setPasscode(value.slice(0, 4));
+                setError(null);
+              }
             }}
-            error={error}
-            autoFocus={false} 
-            secure={true}
+            error={!!error}
+            secure
             inputStyle="w-20 h-20"
+            autoFocus={false}
           />
 
+          {loading && <ActivityIndicator className="mt-6" color="#fff" />}
+
           {error && (
-            <Text className="text-red-500 text-sm mt-4">
-              Incorrect passcode. Please try again.
+            <Text className="text-red-500 text-sm mt-4 text-center">
+              {error}
             </Text>
           )}
         </View>

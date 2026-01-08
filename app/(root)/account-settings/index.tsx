@@ -75,7 +75,7 @@ const AccountSettings = () => {
   const tabs: Tab[] = [
     { label: "Personal", value: "personal" },
     { label: "Security", value: "security" },
-    { label: "General", value: "general" },
+    // { label: "General", value: "general" },
   ];
 
   const genderOptions = [
@@ -126,23 +126,23 @@ const AccountSettings = () => {
   };
 
   const handleChangePasscode = () => {
-    router.push("/(root)/account-settings/change-passcode");
+    // router.push("/(root)/account-settings/change-passcode");
   };
 
   const handleResetTransactionPin = () => {
-    router.push("/(root)/account-settings/reset-transaction-pin");
+    // router.push("/(root)/account-settings/reset-transaction-pin");
   };
 
   const handleChangeTransactionPin = () => {
-    router.push("/(root)/account-settings/change-transaction-pin");
+    // router.push("/(root)/account-settings/change-transaction-pin");
   };
 
   const handleTemporarilyDisable = () => {
-    router.push("/(root)/account-settings/temporarily-disable");
+    // router.push("/(root)/account-settings/temporarily-disable");
   };
 
   const handleCloseAccount = () => {
-    router.push("/(root)/account-settings/close-account");
+    // router.push("/(root)/account-settings/close-account");
   };
 
   const handleResetPinConfirm = () => {
@@ -278,7 +278,7 @@ const AccountSettings = () => {
         <View className="bg-primary-400 rounded-2xl p-4">
           <Pressable
             className="flex-row items-center justify-between py-4 border-b border-primary-300 last:border-b-0"
-            onPress={handleResetPasscode}
+            // onPress={handleResetPasscode}
           >
             <CustomText>Reset Passcode</CustomText>
             <Ionicons name="chevron-forward" size={20} color="#fff" />
@@ -335,12 +335,12 @@ const AccountSettings = () => {
         return renderPersonalTab();
       case "security":
         return renderSecurityTab();
-      case "general":
-        return (
-          <View className="flex-1 justify-center items-center">
-            <Text className="text-gray-500 text-base">Coming soon</Text>
-          </View>
-        );
+      // case "general":
+      //   return (
+      //     <View className="flex-1 justify-center items-center">
+      //       <Text className="text-gray-500 text-base">Coming soon</Text>
+      //     </View>
+        // );
       default:
         return null;
     }

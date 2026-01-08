@@ -1,50 +1,43 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
-import icons, { svgIcons } from "@/app/assets/icons/icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView } from "react-native";
+
 import Header from "@/app/components/header-back";
 import AmountCard from "@/app/components/home/cards/AmountCard";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { ScrollView, View } from "react-native";
 import PaymentInfoCard from "@/app/components/home/biils/PaymentInfoCard";
 import TransferSummaryCard from "@/app/components/TransferSummaryCard";
 import SenderCard from "@/app/components/home/cards/sender-card.tsx";
 import ScheduleTransaction from "@/app/components/ScheduleTransaction";
-import { dayOptions, frequencyOptions } from "@/app/lib/utils";
 import Button from "@/app/components/Button";
 
-export default function ConfirmBettingPayment() {
-  const params = useLocalSearchParams();
-  const router = useRouter();
+import {
+  dayOptions,
+  frequencyOptions,
+  utilityserviceItems,
+} from "@/app/lib/utils";
 
-  const {
-    customerId,
-    amount,
-    providerId,
-    providerName,
-    providerSlug,
-    skipValidation,
-    handleWithProductCode,
-    packageId,
-    packageName,
-    packageSlug,
-    packageAmount,
-    billerId,
-  } = params;
+export default function ConfirmBuyAirtime() {
+  const { service, product, meterNumber, amount, providerName } =
+    useLocalSearchParams();
+  const router = useRouter();
 
   const rawAmount = Array.isArray(amount)
     ? amount[0]
     : amount?.toString() || "0";
   const cleanedAmountString = rawAmount.replace(/[₦,\s]/g, "");
-  const normalizedAmount = Number(cleanedAmountString);
-  const finalAmount = isNaN(normalizedAmount) ? 0 : normalizedAmount;
+  const finalAmount = Number(cleanedAmountString) || 0;
 
-  const serviceLabel = Array.isArray(providerName)
+  const safeProviderName = Array.isArray(providerName)
     ? providerName[0]
-    : providerName || "Unknown Service";
+    : providerName || "";
 
-  const customerIdStr = Array.isArray(customerId)
-    ? customerId[0]
-    : customerId || "";
+  const selectedServiceItem = utilityserviceItems.find(
+    (item) => item.value === service
+  );
+  const serviceLabel =
+    safeProviderName || selectedServiceItem?.label || "Unknown Service";
+  const providerIcon = selectedServiceItem?.icon;
 
   const fee = 0;
   const totalDebit = finalAmount + fee;
@@ -60,22 +53,12 @@ export default function ConfirmBettingPayment() {
     router.push({
       pathname: "/(root)/betting/authorize",
       params: {
+        service,
+        product,
+        meterNumber,
         amount: rawAmount,
-        customerId: customerIdStr,
-
-        providerId,
-        providerName,
-        providerSlug,
-        skipValidation,
-        handleWithProductCode,
-
-        packageId,
-        packageName,
-        packageSlug,
-        packageAmount,
-        billerId,
-
-        scheduleEnabled: scheduleEnabled.toString(),
+        fee,
+        totalDebit,
         scheduleName,
         frequency,
         dayOfWeek,
@@ -88,7 +71,6 @@ export default function ConfirmBettingPayment() {
   return (
     <SafeAreaView className="flex-1 bg-primary-100">
       <Header title="Confirm payment" showClose />
-
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
@@ -96,13 +78,15 @@ export default function ConfirmBettingPayment() {
       >
         <AmountCard
           amount={rawAmount}
-          description={`Payment to ${serviceLabel}`}
+          description={`Payment for ${serviceLabel}`}
         />
 
         <PaymentInfoCard
           provider={serviceLabel}
-          phone={customerIdStr}
-          icon={svgIcons.chip} 
+          phone={
+            Array.isArray(meterNumber) ? meterNumber[0] : meterNumber || ""
+          }
+          icon={providerIcon}
         />
 
         <TransferSummaryCard
@@ -130,9 +114,7 @@ export default function ConfirmBettingPayment() {
           dayOptions={dayOptions}
         />
 
-        <View className="mt-4">
-          <Button title="Pay" variant="primary" onPress={handleContinue} />
-        </View>
+        <Button title="Pay" variant="primary" onPress={handleContinue} />
       </ScrollView>
     </SafeAreaView>
   );

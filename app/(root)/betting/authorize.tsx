@@ -15,32 +15,25 @@ import Numpad from "@/app/components/inputs/Numpad";
 
 import { useAppDispatch } from "@/app/lib/hooks/useAppDispatch";
 import { payBill } from "@/app/lib/thunks/billsThunks";
+import { clearError } from "@/app/lib/slices/billsSlice";
 
-/* ---------------- HELPER ---------------- */
 const getParam = (param?: string | string[]) =>
   Array.isArray(param) ? param[0] : param ?? "";
 
-export default function AuthorizePayment() {
+export default function AuthorizeUtilityPayment() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const dispatch = useAppDispatch();
-
-  /* ---------------- PARAMS ---------------- */
+  console.log(params);
 
   const amount = getParam(params.amount);
-  const customerId = getParam(params.customerId);
-
-  const packageSlug = getParam(params.packageSlug);
-  const providerSlug = getParam(params.providerSlug);
-  console.log(params)
-
-  /* ---------------- STATE ---------------- */
+  const meterNumber = getParam(params.meterNumber);
+  const service = getParam(params.service);
+  const product = getParam(params.product);
 
   const [passcode, setPasscode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  /* ---------------- NUMPAD ---------------- */
 
   const handleNumberPress = (num: string) => {
     if (passcode.length < 4 && !loading) {
@@ -58,7 +51,6 @@ export default function AuthorizePayment() {
     }
   };
 
-
   useEffect(() => {
     if (passcode.length === 4) {
       handlePay();
@@ -70,16 +62,26 @@ export default function AuthorizePayment() {
     setError(null);
 
     try {
+      const cleanedAmount = amount.replace(/[₦,\s]/g, "");
+      const numericAmount = Number(cleanedAmount);
+
+      if (isNaN(numericAmount)) {
+        throw new Error("Invalid amount");
+      }
+
       const payload = {
         type: "betting",
-        provider: packageSlug,
-        amount: Number(amount),
-        bundleSlug: providerSlug,
-        customerId,
+        provider: service,
+        amount: numericAmount,
+        bundleSlug: product,
+        customerId: meterNumber,
         transactionPin: passcode,
       };
 
+      console.log("PayBill payload:", payload);
+
       const result = await dispatch(payBill(payload)).unwrap();
+      dispatch(clearError());
 
       router.replace({
         pathname: "/(root)/betting/success",
@@ -90,14 +92,16 @@ export default function AuthorizePayment() {
         },
       });
     } catch (err: any) {
-      setError(err || "Payment failed");
+      setError(
+        err?.message ||
+          "Service not available at this time, please try again later"
+      );
       Vibration.vibrate(400);
       setPasscode("");
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
     <SafeAreaView className="flex-1 bg-primary-100">
@@ -122,7 +126,8 @@ export default function AuthorizePayment() {
             }}
             error={!!error}
             secure
-            inputStyle="w-20 h-20"autoFocus={false}
+            inputStyle="w-20 h-20"
+            autoFocus={false}
           />
 
           {loading && <ActivityIndicator className="mt-6" color="#fff" />}

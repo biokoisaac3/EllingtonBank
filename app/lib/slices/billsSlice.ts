@@ -58,6 +58,9 @@ const billsSlice = createSlice({
       state.paymentResult = null;
       state.error = null;
     },
+    clearError: (state) => {
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -154,6 +157,7 @@ export const {
   clearProviders,
   clearPackages,
   clearPaymentResult,
+  clearError,
 } = billsSlice.actions;
 
 export default billsSlice.reducer;

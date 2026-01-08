@@ -15,6 +15,7 @@ import Numpad from "@/app/components/inputs/Numpad";
 
 import { useAppDispatch } from "@/app/lib/hooks/useAppDispatch";
 import { payBill } from "@/app/lib/thunks/billsThunks";
+import { clearError } from "@/app/lib/slices/billsSlice";
 
 const getParam = (param?: string | string[]) =>
   Array.isArray(param) ? param[0] : param ?? "";
@@ -71,6 +72,8 @@ export default function AuthorizeInternetPayment() {
       };
           
       const result = await dispatch(payBill(payload)).unwrap();
+      dispatch(clearError());
+
 
       router.replace({
         pathname: "/(root)/internet/success",
@@ -81,7 +84,9 @@ export default function AuthorizeInternetPayment() {
         },
       });
     } catch (err: any) {
-      setError(err || "Payment failed");
+      setError(
+        err || "Service not available at this time, please try again later"
+      );
       Vibration.vibrate(400);
       setPasscode("");
     } finally {

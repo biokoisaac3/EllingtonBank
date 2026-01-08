@@ -13,6 +13,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Button from "./components/Button";
 import CustomText from "./components/CustomText";
+import { clearError, logout } from "@/app/lib/slices/authSlice";
+import { useDispatch } from "react-redux";
 
 const backgrounds = [
   {
@@ -46,6 +48,7 @@ export default function Index() {
   const router = useRouter();
   const [backgroundIndex, setBackgroundIndex] = useState(0);
   const pan = useRef(new Animated.ValueXY()).current;
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -71,7 +74,11 @@ export default function Index() {
       },
     })
   ).current;
-
+  const handleAuthNavigation = (path: string) => {
+    dispatch(logout());
+    dispatch(clearError());
+    router.push(path as any);
+  };
   return (
     <Animated.View style={{ flex: 1 }} {...panResponder.panHandlers}>
       <ImageBackground
@@ -122,12 +129,15 @@ export default function Index() {
               <Button
                 title="Create account"
                 variant="secondary"
-                onPress={() => router.push("/(auth)/create-account-info")}
+                onPress={() =>
+                  handleAuthNavigation("/(auth)/create-account-info")
+                }
               />
+
               <Button
                 title="Login"
                 variant="primary"
-                onPress={() => router.push("/(auth)/login")}
+                onPress={() => handleAuthNavigation("/(auth)/login")}
               />
             </View>
 

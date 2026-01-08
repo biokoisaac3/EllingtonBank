@@ -81,7 +81,9 @@ console.log(params)
         },
       });
     } catch (err: any) {
-      setError(err || "Payment failed");
+      setError(
+        err || "Service not available at this time, please try again later"
+      );
       Vibration.vibrate(400);
       setPasscode("");
     } finally {

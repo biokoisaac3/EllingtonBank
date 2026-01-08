@@ -1,11 +1,19 @@
 import { Tabs } from "expo-router";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Linking } from "react-native";
+
+const CUSTOMER_CARE_NUMBER = "2347047007086"; 
 
 export default function TabsLayout() {
+  const openWhatsApp = async () => {
+    const url = `https://wa.me/${CUSTOMER_CARE_NUMBER}`;
+    await Linking.openURL(url);
+  };
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#969841",     
+        tabBarActiveTintColor: "#969841",
         tabBarInactiveTintColor: "#FFFFFF",
         tabBarStyle: {
           backgroundColor: "#3F401B",
@@ -22,11 +30,7 @@ export default function TabsLayout() {
           title: "Home",
           tabBarLabel: "Home",
           tabBarIcon: ({ color, size }) => (
-            <Feather
-              name="home"
-              color={color}
-              size={size}
-            />
+            <Feather name="home" color={color} size={size} />
           ),
         }}
       />
@@ -69,6 +73,12 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="whatsapp" color={color} size={size} />
           ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            openWhatsApp(); 
+          },
         }}
       />
     </Tabs>

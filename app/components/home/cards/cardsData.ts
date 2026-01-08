@@ -83,7 +83,7 @@ const firstCardBalance =
     },
     {
       id: 3,
-      title: "Investment portfolio",
+      title: "Point wallets",
       balance: "0.00",
       gradientColors: ["#333419", "#18180C"],
       imagePosition: "top-right",

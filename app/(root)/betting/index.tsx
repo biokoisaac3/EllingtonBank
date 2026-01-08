@@ -2,25 +2,19 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
-  Pressable,
   KeyboardAvoidingView,
   Platform,
-  Keyboard,
-  TouchableWithoutFeedback,
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import * as Contacts from "expo-contacts";
-import { useRouter } from "expo-router";
 
-import Header from "@/app/components/header-back";
 import Button from "@/app/components/Button";
+import Header from "@/app/components/header-back";
 import AmountInput from "@/app/components/inputs/AmountInput";
 import TextInputField from "@/app/components/inputs/TextInputField";
 import { Dropdown } from "@/app/components/inputs/DropdownInputs";
-import BottomSheet from "@/app/components/BottomSheet";
-import CustomText from "@/app/components/CustomText";
+import BundleCard from "@/app/components/home/biils/BundleCard";
+import Loading from "@/app/components/Loading";
 
 import { useAppDispatch } from "@/app/lib/hooks/useAppDispatch";
 import { useAppSelector } from "@/app/lib/hooks/useAppSelector";
@@ -29,9 +23,9 @@ import {
   getPackages,
   validateBillCustomer,
 } from "@/app/lib/thunks/billsThunks";
-import Loading from "@/app/components/Loading";
+import { useRouter } from "expo-router";
 
-export default function BettingLotteryGaming() {
+export default function UtilityBillPayment() {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
@@ -45,17 +39,13 @@ export default function BettingLotteryGaming() {
 
   const [selectedService, setSelectedService] = useState("");
   const [selectedProduct, setSelectedProduct] = useState("");
-  const [customerId, setCustomerId] = useState("");
-  const [amount, setAmount] = useState("100");
-
-  const [contactsSheetVisible, setContactsSheetVisible] = useState(false);
-  const [contacts, setContacts] = useState<Contacts.Contact[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [meterNumber, setMeterNumber] = useState("");
+  const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const safeProviders = useMemo(() => providers ?? [], [providers]);
   const safePackages = useMemo(() => packages ?? [], [packages]);
-
   const isLoadingGlobal =
     providersStatus === "loading" || packagesStatus === "loading";
 
@@ -66,6 +56,7 @@ export default function BettingLotteryGaming() {
   useEffect(() => {
     if (selectedService) {
       dispatch(getPackages({ slug: selectedService })).catch(() => {});
+      setSelectedProduct("");
     }
   }, [selectedService, dispatch]);
 
@@ -81,24 +72,6 @@ export default function BettingLotteryGaming() {
     }
   }, [safePackages, selectedProduct]);
 
-  const serviceOptions = useMemo(
-    () =>
-      safeProviders.map((p) => ({
-        label: p.name,
-        value: p.slug,
-      })),
-    [safeProviders]
-  );
-
-  const productOptions = useMemo(
-    () =>
-      safePackages.map((p) => ({
-        label: p.name,
-        value: p.slug,
-      })),
-    [safePackages]
-  );
-
   const selectedProviderData = useMemo(
     () => safeProviders.find((p) => p.slug === selectedService),
     [safeProviders, selectedService]
@@ -109,43 +82,52 @@ export default function BettingLotteryGaming() {
     [safePackages, selectedProduct]
   );
 
-  const openContacts = async () => {
-    const { status } = await Contacts.requestPermissionsAsync();
-    if (status !== "granted") return;
-
-    const { data } = await Contacts.getContactsAsync({
-      fields: [Contacts.Fields.PhoneNumbers],
-    });
-
-    if (data.length) {
-      setContacts(data);
-      setContactsSheetVisible(true);
+  useEffect(() => {
+    if (selectedPackageData?.amount) {
+      setAmount(String(selectedPackageData.amount));
     }
-  };
+  }, [selectedPackageData]);
 
-  const selectContactNumber = (number: string) => {
-    const cleaned = number.replace(/[^\d]/g, "");
-    setCustomerId(cleaned);
-    setContactsSheetVisible(false);
-  };
+  const predefinedAmount = selectedPackageData?.amount
+    ? String(selectedPackageData.amount)
+    : "";
+
+  const cleanAmount = useMemo(() => {
+    const rawAmount = predefinedAmount || amount;
+    return rawAmount.replace(/,/g, "");
+  }, [predefinedAmount, amount]);
+
+  const parsedAmount = Number(cleanAmount);
 
   const isFormValid =
-    customerId &&
+    meterNumber &&
     selectedService &&
     selectedProduct &&
-    amount &&
-    Number(amount) >= 100;
+    (predefinedAmount || amount) &&
+    !isNaN(parsedAmount) &&
+    parsedAmount >= 100;
 
   const handleContinue = async () => {
-    if (!selectedProviderData || !selectedPackageData || !isFormValid) return;
+    if (!selectedProviderData || !selectedPackageData || !isFormValid) {
+      console.log("Form validation failed:", {
+        meterNumber,
+        selectedService,
+        selectedProduct,
+        amount: cleanAmount,
+        isFormValid,
+        selectedProviderData: !!selectedProviderData,
+        selectedPackageData: !!selectedPackageData,
+      });
+      return;
+    }
 
     try {
       setIsLoading(true);
       setError(null);
 
-      const result = await dispatch(
+      const validationResult = await dispatch(
         validateBillCustomer({
-          customerId,
+          customerId: meterNumber,
           productName: selectedPackageData.slug,
           billerSlug: selectedProviderData.slug,
         })
@@ -156,22 +138,33 @@ export default function BettingLotteryGaming() {
         params: {
           service: selectedService,
           product: selectedProduct,
-          customerId,
-          amount,
+          meterNumber: meterNumber,
+          amount: cleanAmount,
           providerId: String(selectedProviderData.id),
           providerName: selectedProviderData.name,
           providerSlug: selectedProviderData.slug,
           packageId: String(selectedPackageData.id),
           packageName: selectedPackageData.name,
           packageSlug: selectedPackageData.slug,
+          validationResult: JSON.stringify(validationResult),
         },
       });
     } catch (err: any) {
-      setError(err?.message || "Customer validation failed");
+      console.log("Validation error:", err);
+      setError(err?.message || "Validation failed");
     } finally {
       setIsLoading(false);
     }
   };
+
+  const serviceOptions = safeProviders.map((p) => ({
+    label: p.name,
+    value: p.slug,
+  }));
+  const productOptions = safePackages.map((p) => ({
+    label: p.name,
+    value: p.slug,
+  }));
 
   return (
     <SafeAreaView className="flex-1 bg-primary-100">
@@ -179,103 +172,70 @@ export default function BettingLotteryGaming() {
       <Loading visible={isLoading || isLoadingGlobal} />
 
       <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-          <View className="flex-1">
-            <ScrollView
-              className="flex-1"
-              contentContainerStyle={{ flexGrow: 1 }}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-            >
-              <View className="flex-1 p-4">
-                {(error || errorFromStore) && (
-                  <View className="bg-red-500/10 border border-red-500 rounded-lg p-3 mb-4">
-                    <Text className="text-red-500 text-sm">
-                      {error || errorFromStore}
-                    </Text>
-                  </View>
-                )}
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, padding: 16 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {(error || errorFromStore) && (
+            <View className="bg-red-500/10 border border-red-500 rounded-lg p-3 mb-4">
+              <Text className="text-red-500 text-sm">
+                {error || errorFromStore}
+              </Text>
+            </View>
+          )}
 
-                <Dropdown
-                  label="Select service item"
-                  options={serviceOptions}
-                  selectedValue={selectedService}
-                  onSelect={setSelectedService}
-                  searchable
-                />
+          <Dropdown
+            label="Select service item"
+            options={serviceOptions}
+            selectedValue={selectedService}
+            onSelect={setSelectedService}
+            searchable
+          />
 
-                <Dropdown
-                  label="Select product"
-                  options={productOptions}
-                  selectedValue={selectedProduct}
-                  onSelect={setSelectedProduct}
-                  disabled={!selectedService || packagesStatus === "loading"}
-                />
+          <Dropdown
+            label="Select product"
+            options={productOptions}
+            selectedValue={selectedProduct}
+            onSelect={setSelectedProduct}
+            disabled={!selectedService || packagesStatus === "loading"}
+          />
 
-                <TextInputField
-                  label="Customer ID"
-                  value={customerId}
-                  onChangeText={setCustomerId}
-                  keyboardType="number-pad"
-                  placeholder="Enter customer ID"
-                  rightIcon={
-                    <Ionicons name="person-circle" size={24} color="white" />
-                  }
-                  onRightIconPress={openContacts}
-                />
+          <TextInputField
+            label="Enter meter number"
+            value={meterNumber}
+            onChangeText={setMeterNumber}
+            keyboardType="number-pad"
+            placeholder="Enter meter number"
+          />
 
-                <AmountInput
-                  value={amount}
-                  onChange={setAmount}
-                  placeholder="0"
-                />
+          {predefinedAmount ? (
+            <BundleCard price={predefinedAmount} />
+          ) : (
+            <AmountInput value={amount} onChange={setAmount} placeholder="0" />
+          )}
 
-                <Text className="text-white/60 text-sm italic pl-1 mt-2 mb-6">
-                  ❔ Enter an amount above ₦100
-                </Text>
+          <Text className="text-white/60 text-sm italic pl-1 mt-2 mb-6">
+            ❔ Enter an amount above ₦100
+          </Text>
 
-                <View className="mt-auto pb-4">
-                  <Button
-                    title="Continue"
-                    variant="primary"
-                    onPress={handleContinue}
-                    disabled={!isFormValid || isLoading}
-                  />
-                </View>
-              </View>
-            </ScrollView>
+          <View className="mt-auto pb-4">
+            <Button
+              title="Continue"
+              variant="primary"
+              onPress={handleContinue}
+              disabled={!isFormValid || isLoading}
+            />
           </View>
-        </TouchableWithoutFeedback>
+        </ScrollView>
       </KeyboardAvoidingView>
-
-      <BottomSheet
-        visible={contactsSheetVisible}
-        onClose={() => setContactsSheetVisible(false)}
-        title="Select Contact"
-        hideshowButton
-      >
-        {contacts
-          .filter((c) => c.phoneNumbers?.length)
-          .map((c, index) => {
-            const number = c.phoneNumbers?.[0]?.number;
-            if (!number) return null;
-
-            return (
-              <Pressable
-                key={index}
-                onPress={() => selectContactNumber(number)}
-                className="py-3 border-b border-primary-400"
-              >
-                <CustomText>{c.name ?? "Unknown"}</CustomText>
-                <CustomText secondary>{number}</CustomText>
-              </Pressable>
-            );
-          })}
-      </BottomSheet>
     </SafeAreaView>
   );
 }
+
+
+
+
+

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ellingtonbank",
+    "name": "Ellingtonbank",
     "slug": "ellingtonbank",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -67,7 +67,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "0ed900ac-3f64-4090-9c52-8d28d7d87ee6"
+        "projectId": "d1510d16-c5d6-4f3b-9188-73b2422cc4f4"
       }
     }
   }

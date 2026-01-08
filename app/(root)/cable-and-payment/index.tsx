@@ -90,7 +90,6 @@ export default function CablePayment() {
     [safePackages, selectedProduct]
   );
 
-  // Auto-set amount if package has a fixed price
   useEffect(() => {
     if (selectedPackageData?.amount)
       setAmount(String(selectedPackageData.amount));
@@ -110,7 +109,6 @@ export default function CablePayment() {
       setIsLoading(true);
       setError(null);
 
-      // Validate customer before going next
       await dispatch(
         validateBillCustomer({
           customerId: accountId,
@@ -136,7 +134,7 @@ export default function CablePayment() {
       });
     } catch (err: any) {
       console.log("Validation error:", err);
-      setError(err?.message || "Validation failed");
+      setError(err || "Validation failed");
     } finally {
       setIsLoading(false);
     }

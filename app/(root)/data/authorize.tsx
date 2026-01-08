@@ -15,6 +15,7 @@ import Numpad from "@/app/components/inputs/Numpad";
 
 import { useAppDispatch } from "@/app/lib/hooks/useAppDispatch";
 import { payBill } from "@/app/lib/thunks/billsThunks";
+import { clearError } from "@/app/lib/slices/billsSlice";
 
 const getParam = (param?: string | string[]) =>
   Array.isArray(param) ? param[0] : param ?? "";
@@ -28,47 +29,50 @@ export default function AuthorizeDataPayment() {
   const phone = getParam(params.phone);
   const provider = getParam(params.provider);
   const billerSlug = getParam(params.billerSlug);
-  const bundle = getParam(params.bundle);
 
   const [passcode, setPasscode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+
   const handleNumberPress = (num: string) => {
     if (passcode.length < 4 && !loading) {
-      setPasscode((prev) => {
-        setError(null);
-        return prev + num;
-      });
+      dispatch(clearError());
+      setError(null);
+      setPasscode((prev) => prev + num);
     }
   };
 
   const handleDelete = () => {
     if (!loading) {
-      setPasscode((prev) => prev.slice(0, -1));
+      dispatch(clearError());
       setError(null);
+      setPasscode((prev) => prev.slice(0, -1));
     }
   };
+
 
   useEffect(() => {
     if (passcode.length === 4) {
       handlePay();
     }
   }, [passcode]);
-const normalizeAirtimeProvider = (value: string) => {
-  const v = value.toLowerCase();
 
-  if (v.includes("MTN")) return "MTN_VTU";
-  if (v.includes("AIRTEL")) return "AIRTEL_VTU";
-  if (v.includes("GLO")) return "GLO_VTU";
-  if (v.includes("9MOBILE"))  return "9MOBILE_VTU";
+  const normalizeAirtimeProvider = (value: string) => {
+    const v = value.toLowerCase();
 
-  return value;
-};
+    if (v.includes("mtn")) return "MTN_VTU";
+    if (v.includes("airtel")) return "AIRTEL_VTU";
+    if (v.includes("glo")) return "GLO_VTU";
+    if (v.includes("9mobile")) return "9MOBILE_VTU";
+
+    return value;
+  };
 
   const handlePay = async () => {
     setLoading(true);
     setError(null);
+    dispatch(clearError());
 
     try {
       const payload = {
@@ -80,8 +84,9 @@ const normalizeAirtimeProvider = (value: string) => {
         transactionPin: passcode,
       };
 
-
       const result = await dispatch(payBill(payload)).unwrap();
+
+      dispatch(clearError());
 
       router.replace({
         pathname: "/(root)/data/success",
@@ -92,7 +97,9 @@ const normalizeAirtimeProvider = (value: string) => {
         },
       });
     } catch (err: any) {
-      setError(err || "Payment failed");
+      setError(
+        err || "Service not available at this time, please try again later"
+      );
       Vibration.vibrate(400);
       setPasscode("");
     } finally {
@@ -103,7 +110,6 @@ const normalizeAirtimeProvider = (value: string) => {
   return (
     <SafeAreaView className="flex-1 bg-primary-100">
       <StatusBar barStyle="light-content" />
-
       <Header title="Authorize" />
 
       <View className="flex-1 justify-between px-6 pb-12">
@@ -117,8 +123,9 @@ const normalizeAirtimeProvider = (value: string) => {
             value={passcode}
             onChange={(value) => {
               if (!loading) {
-                setPasscode(value.slice(0, 4));
+                dispatch(clearError());
                 setError(null);
+                setPasscode(value.slice(0, 4));
               }
             }}
             error={!!error}
