@@ -7,13 +7,26 @@ import { restoreAuth } from "../lib/thunks/authThunks";
 
 export default function AuthWrapper() {
   const dispatch = useDispatch<AppDispatch>();
-  const { isAuthenticated, isRestoring } = useAppSelector(
-    (state: RootState) => state.auth
+
+  const {
+    isAuthenticated,
+    isRestoring,
+    error: authError,
+  } = useAppSelector((state: RootState) => state.auth);
+
+  const { error: beneficiariesError } = useAppSelector(
+    (state) => state.beneficiaries
   );
+  const { error: accountError } = useAppSelector((state) => state.accounts);
+  const { error: billsError } = useAppSelector((state) => state.bills);
+  const { error: cardError } = useAppSelector((state) => state.cards);
+  const { error: kycError } = useAppSelector((state) => state.kyc);
+  const { error: transferError } = useAppSelector((state) => state.transfers);
+
+  const [ready, setReady] = useState(false);
 
   const router = useRouter();
   const segments = useSegments();
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     dispatch(restoreAuth());
@@ -26,14 +39,42 @@ export default function AuthWrapper() {
   }, [isRestoring]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready ) return;
 
     const inAuthGroup = segments[0] === "(auth)";
+    const isOnLogin = segments.join("/") === "(auth)/login";
 
-    if (isAuthenticated && inAuthGroup) {
-      router.replace("/(root)/(tabs)");
+    const errors = [
+      authError,
+      beneficiariesError,
+      accountError,
+      billsError,
+      cardError,
+      kycError,
+      transferError,
+    ];
+
+    const hasSessionError = errors.some(
+      (error) =>
+        typeof error === "string" &&
+        (error.toLowerCase().includes("session") ||
+          error.toLowerCase().includes("invalid token"))
+    );
+
+    if (hasSessionError && !inAuthGroup && !isOnLogin) {
+      router.replace("/(auth)/login");
     }
-  }, [ready, isAuthenticated, segments, router]);
+  }, [
+    ready,
+    segments,
+    authError,
+    beneficiariesError,
+    accountError,
+    billsError,
+    cardError,
+    kycError,
+    transferError,
+  ]);
 
   if (!ready) {
     return null;

@@ -1,71 +1,72 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useDispatch, useSelector } from "react-redux";
+
 import SearchBar from "@/app/components/SearchBar";
 import TransactionCard from "@/app/components/TransactionCard";
-import { Transaction } from "@/app/lib/types/transaction";
-import { mockTransactions } from "@/app/lib/utils";
+import { AppDispatch, RootState } from "@/app/lib/store";
+import { fetchAccountTransactions } from "@/app/lib/thunks/transferThunks";
+import Loading from "@/app/components/Loading";
 
 
-
-const groupTransactionsByDate = (transactions: Transaction[]) => {
+const groupTransactionsByDate = (transactions: any[]) => {
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
-  const groups: { [key: string]: Transaction[] } = {};
+  const groups: Record<string, any[]> = {};
 
   transactions.forEach((tx) => {
-    const txDate = new Date(tx.date);
-    let groupKey: string;
+    const txDate = new Date(tx.TransactionDate);
+    let groupKey = txDate.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
 
     if (txDate.toDateString() === today.toDateString()) {
       groupKey = "Today";
     } else if (txDate.toDateString() === yesterday.toDateString()) {
       groupKey = "Yesterday";
-    } else {
-      groupKey = txDate.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
     }
 
-    if (!groups[groupKey]) {
-      groups[groupKey] = [];
-    }
+    if (!groups[groupKey]) groups[groupKey] = [];
     groups[groupKey].push(tx);
   });
 
-  const sortedGroups = Object.keys(groups)
-    .sort((a, b) => {
-      if (a === "Today") return -1;
-      if (b === "Today") return 1;
-      if (a === "Yesterday") return -1;
-      if (b === "Yesterday") return 1;
-      return new Date(b).getTime() - new Date(a).getTime();
-    })
-    .reduce((obj, key) => {
-      obj[key] = groups[key];
-      return obj;
-    }, {} as { [key: string]: Transaction[] });
-
-  return sortedGroups;
+  return groups;
 };
 
 export default function TransactionsScreen() {
+  const dispatch = useDispatch<AppDispatch>();
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredTransactions] = useState(mockTransactions); 
+
+  const { transactions, isLoading } = useSelector(
+    (state: RootState) => state.transfers
+  );
+
+  useEffect(() => {
+    dispatch(fetchAccountTransactions());
+  }, [dispatch]);
+
+  const filteredTransactions = useMemo(() => {
+    if (!searchQuery) return transactions;
+
+    return transactions.filter((tx) =>
+      tx.Narration.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [transactions, searchQuery]);
 
   const groupedTransactions = groupTransactionsByDate(filteredTransactions);
-  const hasTransactions = Object.keys(groupedTransactions).length > 0;
+  const hasTransactions = filteredTransactions.length > 0;
 
   return (
-    <SafeAreaView className="flex-1 bg-primary-100">
-      <View className="p-4">
-        <View className="flex-col mb-4">
-          <Text className="text-white text-xl font-bold mb-2">
+    <SafeAreaView className="flex-1 bg-primary-100 -mb-16">
+      <View className="p-4 flex-1">
+        {/* Header */}
+        <View className="mb-4">
+          <Text className="text-white text-xl font-bold">
             Recent transactions
           </Text>
           <Text className="text-white/60 text-sm">
@@ -75,31 +76,41 @@ export default function TransactionsScreen() {
 
         <SearchBar onSearch={setSearchQuery} />
 
-        {hasTransactions ? (
+        {isLoading && (
+      <Loading visible/>
+        )}
+
+        {!isLoading && hasTransactions && (
           <ScrollView showsVerticalScrollIndicator={false}>
             {Object.entries(groupedTransactions).map(([date, transactions]) => (
               <View key={date} className="mb-4">
-                <Text className="text-white/70 text-sm font-medium mb-2 capitalize">
+                <Text className="text-white/70 text-sm font-medium mb-2">
                   {date}
                 </Text>
-                {transactions.map((transaction) => (
+
+                {transactions.map((transaction, index) => (
                   <TransactionCard
-                    key={transaction.id}
+                    key={`${transaction.ReferenceID}-${index}`}
                     transaction={transaction}
                   />
                 ))}
               </View>
             ))}
           </ScrollView>
-        ) : (
-          <View className="flex-1 items-center justify-center mt-8">
-            <Ionicons name="receipt-outline" size={64} color="white/30" />
-            <Text className="text-white/60 text-center text-base mt-4">
-              No transaction yet
+        )}
+
+        {!isLoading && !hasTransactions && (
+          <View className="flex-1 items-center justify-center">
+            <Ionicons
+              name="receipt-outline"
+              size={64}
+              color="rgba(255,255,255,0.3)"
+            />
+            <Text className="text-white/60 text-base mt-4">
+              No transactions yet
             </Text>
-            <Text className="text-white/60 text-center text-sm">
-              Your transaction history will appear here once you start using the
-              account
+            <Text className="text-white/50 text-sm text-center mt-1">
+              Your transaction history will appear here
             </Text>
           </View>
         )}

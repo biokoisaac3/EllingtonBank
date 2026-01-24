@@ -2,8 +2,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   View,
-  Text,
-  TouchableOpacity,
   KeyboardAvoidingView,
   ScrollView,
   Keyboard,

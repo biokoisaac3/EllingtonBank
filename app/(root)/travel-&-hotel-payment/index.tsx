@@ -26,7 +26,7 @@ import {
   getPackages,
   validateBillCustomer,
 } from "@/app/lib/thunks/billsThunks";
-import { clearError } from "@/app/lib/slices/billsSlice";
+import { clearError, clearPackages, clearProviders } from "@/app/lib/slices/billsSlice";
 
 export default function InternetServicesPayment() {
   const router = useRouter();
@@ -57,6 +57,8 @@ export default function InternetServicesPayment() {
   }, [dispatch]);
 
   useEffect(() => {
+     dispatch(clearProviders());
+     dispatch(clearPackages());
     dispatch(getBillerProviders({ type: "travel" })).catch(() => {});
   }, [dispatch]);
 

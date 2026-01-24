@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useDispatch } from "react-redux";
-import type { AppDispatch } from "../lib/store"; 
+import type { AppDispatch } from "../lib/store";
 import { logoutUser } from "../lib/thunks/authThunks";
 import { useRouter } from "expo-router";
 
@@ -63,12 +63,12 @@ const BottomMenu: React.FC<BottomMenuProps> = ({
   onClose,
   user,
   items = [],
-  version = "3.11",
+  version = "2.0.0",
 }) => {
   const screenHeight = Dimensions.get("window").height;
   const [slideAnim] = useState(new Animated.Value(screenHeight));
   const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter()
+  const router = useRouter();
 
   const defaultListItems: MenuItem[] = [
     // {
@@ -117,9 +117,14 @@ const BottomMenu: React.FC<BottomMenuProps> = ({
     onClose();
   };
 
-  const handleLogout = () => {
-    dispatch(logoutUser());
-    router.replace("/(auth)/current-user")
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap();
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Optionally show error to user
+    }
+    router.replace("/(auth)/current-user");
     onClose();
   };
 

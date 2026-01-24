@@ -14,7 +14,11 @@ import Header from "@/app/components/header-back";
 import { Tab, TabBar } from "@/app/components/tabs";
 import { useAppSelector } from "@/app/lib/hooks/useAppSelector";
 import { useAppDispatch } from "@/app/lib/hooks/useAppDispatch";
-import { updateUserProfile, getUserProfile } from "@/app/lib/thunks/authThunks";
+import {
+  updateUserProfile,
+  getUserProfile,
+  forgotPasscode,
+} from "@/app/lib/thunks/authThunks";
 import { Dropdown } from "@/app/components/inputs/DropdownInputs";
 import Button from "@/app/components/Button";
 import Loading from "@/app/components/Loading";
@@ -30,6 +34,7 @@ const AccountSettings = () => {
   const { user, isLoading: authLoading } = useAppSelector(
     (state) => state.auth
   );
+
   const [isUpdating, setIsUpdating] = useState(false);
 
   const [showResetModal, setShowResetModal] = useState(false);
@@ -126,7 +131,7 @@ const AccountSettings = () => {
   };
 
   const handleChangePasscode = () => {
-    // router.push("/(root)/account-settings/change-passcode");
+    router.push("/(root)/account-settings/change-passcode");
   };
 
   const handleResetTransactionPin = () => {
@@ -134,7 +139,7 @@ const AccountSettings = () => {
   };
 
   const handleChangeTransactionPin = () => {
-    // router.push("/(root)/account-settings/change-transaction-pin");
+    router.push("/(root)/account-settings/change-transaction-pin");
   };
 
   const handleTemporarilyDisable = () => {
@@ -145,9 +150,12 @@ const AccountSettings = () => {
     // router.push("/(root)/account-settings/close-account");
   };
 
-  const handleResetPinConfirm = () => {
+  const email = user?.email as string;
+
+  const handleResetPinConfirm = async () => {
     setShowResetModal(false);
-    Alert.alert("Success", "Verification code sent to your email.");
+    await dispatch(forgotPasscode({ email })).unwrap();
+    router.push("/(root)/account-settings/reset-passcode");
   };
 
   const renderPersonalTab = () => (
@@ -278,7 +286,7 @@ const AccountSettings = () => {
         <View className="bg-primary-400 rounded-2xl p-4">
           <Pressable
             className="flex-row items-center justify-between py-4 border-b border-primary-300 last:border-b-0"
-            // onPress={handleResetPasscode}
+            onPress={handleResetPasscode}
           >
             <CustomText>Reset Passcode</CustomText>
             <Ionicons name="chevron-forward" size={20} color="#fff" />
@@ -290,13 +298,7 @@ const AccountSettings = () => {
             <CustomText>Change Passcode</CustomText>
             <Ionicons name="chevron-forward" size={20} color="#fff" />
           </Pressable>
-          <Pressable
-            className="flex-row items-center justify-between py-4 border-b border-primary-300 last:border-b-0"
-            onPress={handleResetTransactionPin}
-          >
-            <CustomText>Reset Transaction PIN</CustomText>
-            <Ionicons name="chevron-forward" size={20} color="#fff" />
-          </Pressable>
+         
           <Pressable
             className="flex-row items-center justify-between py-4 border-b border-primary-300 last:border-b-0"
             onPress={handleChangeTransactionPin}
@@ -307,7 +309,7 @@ const AccountSettings = () => {
         </View>
       </View>
 
-      <View className="mb-6">
+      {/* <View className="mb-6">
         <CustomText className="mb-4">Disable Account</CustomText>
         <View className="bg-primary-400 rounded-2xl p-4">
           <Pressable
@@ -325,7 +327,7 @@ const AccountSettings = () => {
             <Ionicons name="chevron-forward" size={20} color="#fff" />
           </Pressable>
         </View>
-      </View>
+      </View> */}
     </ScrollView>
   );
 
@@ -340,7 +342,7 @@ const AccountSettings = () => {
       //     <View className="flex-1 justify-center items-center">
       //       <Text className="text-gray-500 text-base">Coming soon</Text>
       //     </View>
-        // );
+      // );
       default:
         return null;
     }

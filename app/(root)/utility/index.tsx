@@ -24,6 +24,11 @@ import {
   validateBillCustomer,
 } from "@/app/lib/thunks/billsThunks";
 import { useRouter } from "expo-router";
+import {
+  clearError,
+  clearPackages,
+  clearProviders,
+} from "@/app/lib/slices/billsSlice";
 
 export default function UtilityBillPayment() {
   const router = useRouter();
@@ -49,28 +54,37 @@ export default function UtilityBillPayment() {
   const isLoadingGlobal =
     providersStatus === "loading" || packagesStatus === "loading";
 
+  // Reset everything on mount and fetch providers
   useEffect(() => {
+    dispatch(clearError());
+    dispatch(clearProviders());
+    dispatch(clearPackages());
+
+    setSelectedService("");
+    setSelectedProduct("");
+    setAmount("");
+    setMeterNumber("");
+
     dispatch(getBillerProviders({ type: "electricity" })).catch(() => {});
   }, [dispatch]);
 
+  // When user selects a service, fetch its packages
   useEffect(() => {
     if (selectedService) {
-      dispatch(getPackages({ slug: selectedService })).catch(() => {});
+      dispatch(clearPackages());
       setSelectedProduct("");
+      setAmount("");
+
+      dispatch(getPackages({ slug: selectedService })).catch(() => {});
     }
   }, [selectedService, dispatch]);
 
+  // Auto-select the first provider only
   useEffect(() => {
     if (safeProviders.length && !selectedService) {
       setSelectedService(safeProviders[0].slug);
     }
-  }, [safeProviders, selectedService]);
-
-  useEffect(() => {
-    if (safePackages.length && !selectedProduct) {
-      setSelectedProduct(safePackages[0].slug);
-    }
-  }, [safePackages, selectedProduct]);
+  }, [safeProviders]);
 
   const selectedProviderData = useMemo(
     () => safeProviders.find((p) => p.slug === selectedService),
@@ -82,6 +96,7 @@ export default function UtilityBillPayment() {
     [safePackages, selectedProduct]
   );
 
+  // Set amount when a product is selected
   useEffect(() => {
     if (selectedPackageData?.amount) {
       setAmount(String(selectedPackageData.amount));
@@ -108,18 +123,7 @@ export default function UtilityBillPayment() {
     parsedAmount >= 100;
 
   const handleContinue = async () => {
-    if (!selectedProviderData || !selectedPackageData || !isFormValid) {
-      console.log("Form validation failed:", {
-        meterNumber,
-        selectedService,
-        selectedProduct,
-        amount: cleanAmount,
-        isFormValid,
-        selectedProviderData: !!selectedProviderData,
-        selectedPackageData: !!selectedPackageData,
-      });
-      return;
-    }
+    if (!selectedProviderData || !selectedPackageData || !isFormValid) return;
 
     try {
       setIsLoading(true);
@@ -138,7 +142,7 @@ export default function UtilityBillPayment() {
         params: {
           service: selectedService,
           product: selectedProduct,
-          meterNumber: meterNumber,
+          meterNumber,
           amount: cleanAmount,
           providerId: String(selectedProviderData.id),
           providerName: selectedProviderData.name,
@@ -150,7 +154,6 @@ export default function UtilityBillPayment() {
         },
       });
     } catch (err: any) {
-      console.log("Validation error:", err);
       setError(err?.message || "Validation failed");
     } finally {
       setIsLoading(false);
@@ -161,6 +164,7 @@ export default function UtilityBillPayment() {
     label: p.name,
     value: p.slug,
   }));
+
   const productOptions = safePackages.map((p) => ({
     label: p.name,
     value: p.slug,

@@ -1,5 +1,5 @@
 // const BASE_URL = "http://3.220.216.48:3005/api/v2";
-const BASE_URL = "http://35.174.195.146:3005/api/v2";
+const BASE_URL = "https://api.ellingtonbank.com/api/v2";
 
 //users endpoint
 const REGISTER_USERS_ENDPOINT = `${BASE_URL}/users/register`;
@@ -30,6 +30,9 @@ const GET_USER_PROFILE_ENDPOINT = `${BASE_URL}/users/me`;
 const UPDATE_USER_PROFILE_ENDPOINT = `${BASE_URL}/users/me`;
 const UPDATE_USER_ADDRESS_PROFILE_ENDPOINT = `${BASE_URL}/users/address`;
 const UPDATE_USER_PROFILE_PASSWORD_ENDPOINT = `${BASE_URL}/users/profile/passport`;
+export const CHANGE_TRANSACTION_PIN_USERS_ENDPOINT =
+  `${BASE_URL}/users/change-transaction-pin`;
+
 
 //kyc
 const KYC_STATUS_ENDPOINT = `${BASE_URL}/kyc/status`;
@@ -50,6 +53,8 @@ const BENEFICIARIES_ENDPOINT = `${BASE_URL}/beneficiaries/transfer`;
 const BANKS_ENDPOINT = `${BASE_URL}/utilities/banks`;
 const TRANSFER_SAME_BANK = `${BASE_URL}/transfers/intra-bank`;
 const TRANSFER_OTHER_BANK = `${BASE_URL}/transfers/inter-bank`;
+export const FETCH_ACCOUNT_TRANSACTIONS = `${BASE_URL}/transactions/account`;
+
 
 //cards
 const CARD_INITIATE_PAYMENT_ENDPOINT = `${BASE_URL}/cards/initiate-payment`;

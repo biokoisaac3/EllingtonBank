@@ -19,6 +19,7 @@ import {
   resetPasscode,
   changePasscode,
   restoreAuth,
+  changeTransactionPin,
 } from "../thunks/authThunks";
 
 interface User {
@@ -183,6 +184,22 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload as string;
         state.isAuthenticated = false;
+      });
+    /** -----------------------------------------
+     * CHANGE TRANSACTION PIN
+     * ----------------------------------------- */
+    builder
+      .addCase(changeTransactionPin.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(changeTransactionPin.fulfilled, (state) => {
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(changeTransactionPin.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
 
     /** -----------------------------------------

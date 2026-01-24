@@ -54,7 +54,7 @@ export default function CurrentUser() {
   };
 
   useEffect(() => {
-    if (passcode.length === 6 && !isLoading) {
+    if (passcode.length === 6) {
       const t = setTimeout(async () => {
         try {
           if (!email) {
@@ -64,10 +64,13 @@ export default function CurrentUser() {
             return;
           }
 
+          if (isLoading) return;
+
           const result = await dispatch(
             loginUser({ email, passcode })
           ).unwrap();
 
+          setPasscode(""); // Clear passcode after successful login
           router.push({
             pathname: "/(root)/(tabs)",
             params: params,
@@ -81,7 +84,7 @@ export default function CurrentUser() {
 
       return () => clearTimeout(t);
     }
-  }, [passcode, isLoading, dispatch, email, router, params]);
+  }, [passcode, dispatch, email, router, params]); // Removed isLoading from dependencies
 
   const userName = user?.full_name || user?.name || "User";
   const userAvatar = user?.passport;

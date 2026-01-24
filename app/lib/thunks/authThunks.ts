@@ -18,6 +18,7 @@ import {
   UPDATE_USER_PROFILE_ENDPOINT,
   UPDATE_USER_ADDRESS_PROFILE_ENDPOINT,
   UPDATE_USER_PROFILE_PASSWORD_ENDPOINT,
+  CHANGE_TRANSACTION_PIN_USERS_ENDPOINT,
 } from "../api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { logout, setCredentials, setUserOnly } from "../slices/authSlice";
@@ -156,6 +157,12 @@ interface ApiResponse<T = any> {
   data?: T;
   message?: string;
 }
+interface ChangeTransactionPinPayload {
+  currentPin: string;
+  newPin: string;
+  confirmPin: string;
+}
+
 
 // Helper function to persist user profile
 const persistUserProfile = async (user: User) => {
@@ -465,8 +472,56 @@ export const createUserTransactionPin = createAsyncThunk(
         message: data.data?.message || data.message || "Registration complete",
       };
     } catch (error: any) {
+      console.log(error)
       return rejectWithValue(
         error.data?.message || error.message || "Transaction PIN creation error"
+      );
+    }
+  }
+);
+export const changeTransactionPin = createAsyncThunk(
+  "auth/changeTransactionPin",
+  async (
+    payload: ChangeTransactionPinPayload,
+    { rejectWithValue, getState }
+  ) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+
+      const response = await fetch(CHANGE_TRANSACTION_PIN_USERS_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          current_pin: payload.currentPin,
+          new_pin: payload.newPin,
+          confirm_pin: payload.confirmPin,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        return rejectWithValue(
+          errorData?.data?.message ||
+            errorData?.message ||
+            `Change transaction PIN failed (${response.status})`
+        );
+      }
+
+      const data = (await response.json()) as ApiResponse<{ message?: string }>;
+
+      return {
+        message:
+          data.data?.message ||
+          data.message ||
+          "Transaction PIN updated successfully",
+      };
+    } catch (error: any) {
+      return rejectWithValue(
+        error.data?.message || error.message || "Change transaction PIN error"
       );
     }
   }
@@ -792,6 +847,7 @@ export const forgotPasscode = createAsyncThunk(
       }
 
       const data = (await response.json()) as ApiResponse<{ message?: string }>;
+      console.log(data)
       return {
         message:
           data.data?.message || data.message || "Reset code sent to email",
@@ -834,6 +890,7 @@ export const verifyForgotOtp = createAsyncThunk(
         resetToken: data.data?.reset_token || "",
       };
     } catch (error: any) {
+      console.log(error);
       return rejectWithValue(
         error.data?.message || error.message || "Verify OTP error"
       );

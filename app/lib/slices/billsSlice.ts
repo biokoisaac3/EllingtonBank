@@ -18,6 +18,7 @@ interface BillsState {
   error: string | null;
   providersStatus: "idle" | "loading" | "succeeded" | "failed";
   packagesStatus: "idle" | "loading" | "succeeded" | "failed";
+  currentProviderType: string | null; // track current type
 }
 
 const initialState: BillsState = {
@@ -30,6 +31,7 @@ const initialState: BillsState = {
   error: null,
   providersStatus: "idle",
   packagesStatus: "idle",
+  currentProviderType: null,
 };
 
 const billsSlice = createSlice({
@@ -47,6 +49,7 @@ const billsSlice = createSlice({
     clearProviders: (state) => {
       state.providers = null;
       state.providersStatus = "idle";
+      state.currentProviderType = null;
       state.error = null;
     },
     clearPackages: (state) => {
@@ -118,14 +121,12 @@ const billsSlice = createSlice({
         state.providersStatus = "loading";
         state.error = null;
       })
-      .addCase(
-        getBillerProviders.fulfilled,
-        (state, action: PayloadAction<any[]>) => {
-          state.isLoading = false;
-          state.providersStatus = "succeeded";
-          state.providers = action.payload;
-        }
-      )
+      .addCase(getBillerProviders.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.providersStatus = "succeeded";
+        state.providers = action.payload;
+        state.currentProviderType = action.meta.arg.type; // track type
+      })
       .addCase(getBillerProviders.rejected, (state, action) => {
         state.isLoading = false;
         state.providersStatus = "failed";
@@ -138,7 +139,7 @@ const billsSlice = createSlice({
         state.packagesStatus = "loading";
         state.error = null;
       })
-      .addCase(getPackages.fulfilled, (state, action: PayloadAction<any[]>) => {
+      .addCase(getPackages.fulfilled, (state, action) => {
         state.isLoading = false;
         state.packagesStatus = "succeeded";
         state.packages = action.payload;
