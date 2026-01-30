@@ -1,6 +1,6 @@
 // const BASE_URL = "http://3.220.216.48:3005/api/v2";
-// const BASE_URL = "https://unvenial-uncomplaining-von.ngrok-free.dev/api/v2";
-const BASE_URL = "https://api.ellingtonbank.com/api/v2";
+const BASE_URL = "https://unvenial-uncomplaining-von.ngrok-free.dev/api/v2";
+// const BASE_URL = "https://api.ellingtonbank.com/api/v2";
 
 
 //users endpoint
@@ -91,6 +91,8 @@ const LOAN_APPLY_ENDPOINT = `${BASE_URL}/loans/apply`;
 const FETCH_USER_LOANS_ENDPOINT = `${BASE_URL}/loans`;
 const FETCH_SINGLE_LOAN_ENDPOINT = (id: string) =>
   `${BASE_URL}/loans/${id}`;
+  
+const LOAN_DISBURSEMENT_WEBHOOK_ENDPOINT = `${BASE_URL}/webhooks/loans/disbursement`;
 
 
 export {
@@ -151,5 +153,5 @@ export {
   LOAN_APPLY_ENDPOINT,
   FETCH_USER_LOANS_ENDPOINT,
   FETCH_SINGLE_LOAN_ENDPOINT,
-
+  LOAN_DISBURSEMENT_WEBHOOK_ENDPOINT,
 };
