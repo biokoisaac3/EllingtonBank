@@ -295,13 +295,7 @@ export default function Card() {
             ) : (
               <CardContent
                 buttonTitle="Request virtual card"
-                buttonRoute={
-                  user?.kyc_level === 3
-                    ? "/(root)/cards/virtual-card"
-                    : user?.kyc_level === 2
-                    ? "/(root)/kyc/utility-bills"
-                    : "/(root)/account-settings"
-                }
+                buttonRoute="/(root)/cards/virtual-card"
                 sectionTitle="Why a Virtual Card?"
               />
             )
@@ -331,13 +325,7 @@ export default function Card() {
             ) : (
               <CardContent
                 buttonTitle="Request physical card"
-                buttonRoute={
-                  user?.kyc_level === 3
-                    ? "/(root)/cards/physical-card"
-                    : user?.kyc_level === 2
-                    ? "/(root)/kyc/utility-bills"
-                    : "/(root)/account-settings"
-                }
+                buttonRoute="/(root)/cards/physical-card"
                 sectionTitle="Track your physical card"
               />
             )
