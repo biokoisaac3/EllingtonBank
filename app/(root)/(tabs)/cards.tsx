@@ -295,8 +295,8 @@ export default function Card() {
             ) : (
               <CardContent
                 buttonTitle="Request virtual card"
-                buttonRoute="/(root)/cards/virtual-card"
                 sectionTitle="Why a Virtual Card?"
+                cardType="virtual"
               />
             )
           ) : activeTab === "physical" ? (
@@ -325,8 +325,8 @@ export default function Card() {
             ) : (
               <CardContent
                 buttonTitle="Request physical card"
-                buttonRoute="/(root)/cards/physical-card"
                 sectionTitle="Track your physical card"
+                cardType="physical"
               />
             )
           ) : null}
