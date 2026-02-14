@@ -105,6 +105,20 @@ const STATEMENTS_HISTORY_ENDPOINT = (page?: number, limit?: number) => {
 };
 const STATEMENT_BY_ID_ENDPOINT = (id: string) => `${BASE_URL}/statements/${id}`;
 
+// gold
+const GOLD_DASHBOARD_ENDPOINT = `${BASE_URL}/gold/dashboard`;
+const GOLD_PRICE_ENDPOINT = `${BASE_URL}/gold/price`;
+const GOLD_PRICE_HISTORY_ENDPOINT = `${BASE_URL}/gold/price/history`;
+const GOLD_BUY_ENDPOINT = `${BASE_URL}/gold/buy`;
+const GOLD_SELL_ENDPOINT = `${BASE_URL}/gold/sell`;
+const GOLD_GIFT_ENDPOINT = `${BASE_URL}/gold/gift`;
+const GOLD_WITHDRAW_ENDPOINT = `${BASE_URL}/gold/withdraw`;
+const GOLD_TRANSACTIONS_ENDPOINT = `${BASE_URL}/gold/transactions`;
+const GOLD_TRANSACTION_BY_ID_ENDPOINT = (id: string) => `${BASE_URL}/gold/transactions/${id}`;
+const GOLD_TRIGGERS_ENDPOINT = `${BASE_URL}/gold/triggers`;
+const GOLD_TRIGGER_BY_ID_ENDPOINT = (id: string) => `${BASE_URL}/gold/triggers/${id}`;
+const GOLD_SKR_ENDPOINT = `${BASE_URL}/gold/skr`;
+
 
 
 
@@ -170,4 +184,16 @@ export {
   STATEMENTS_REQUEST_ENDPOINT,
   STATEMENTS_HISTORY_ENDPOINT,
   STATEMENT_BY_ID_ENDPOINT,
+  GOLD_DASHBOARD_ENDPOINT,
+  GOLD_PRICE_ENDPOINT,
+  GOLD_PRICE_HISTORY_ENDPOINT,
+  GOLD_BUY_ENDPOINT,
+  GOLD_SELL_ENDPOINT,
+  GOLD_GIFT_ENDPOINT,
+  GOLD_WITHDRAW_ENDPOINT,
+  GOLD_TRANSACTIONS_ENDPOINT,
+  GOLD_TRANSACTION_BY_ID_ENDPOINT,
+  GOLD_TRIGGERS_ENDPOINT,
+  GOLD_TRIGGER_BY_ID_ENDPOINT,
+  GOLD_SKR_ENDPOINT,
 };

@@ -9,6 +9,7 @@ import billsReducer from "./slices/billsSlice";
 import virtualCardsReducer from "./slices/virtualCardsSlice";
 import loansReducer from "./slices/loansSlice"; 
 import statementsReducer from "./slices/statementsSlice";
+import goldReducer from "./slices/goldSlice";
 
 
 
@@ -24,6 +25,7 @@ export const store = configureStore({
     bills: billsReducer,
     loans: loansReducer,
     statements: statementsReducer, 
+    gold: goldReducer,
   },
 });
 
