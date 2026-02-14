@@ -1,6 +1,7 @@
 // const BASE_URL = "http://3.220.216.48:3005/api/v2";
 // const BASE_URL = "https://unvenial-uncomplaining-von.ngrok-free.dev/api/v2";
-const BASE_URL = "https://api.ellingtonbank.com/api/v2";
+// const BASE_URL = "https://api.ellingtonbank.com/api/v2";
+const BASE_URL = "https://stagingapi.ellingtonbank.com/api/v2";
 
 
 //users endpoint
