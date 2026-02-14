@@ -87,7 +87,7 @@ const HomeScreen = () => {
       <BottomMenu
         visible={menuVisible}
         onClose={() => setMenuVisible(false)}
-        version="1.00"
+        version="2.0.0"
         user={{
           name: user?.full_name || user?.name || "User",
           email: user?.email || "",

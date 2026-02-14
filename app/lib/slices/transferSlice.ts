@@ -2,6 +2,8 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import {
   performIntraBankTransfer,
   performInterBankTransfer,
+  fetchAccountTransactions,
+  AccountTransaction,
 } from "../thunks/transferThunks";
 
 export interface TransferResult {
@@ -17,12 +19,14 @@ export interface TransferResult {
 
 export interface TransferState {
   transferResult: TransferResult | null;
+  transactions: AccountTransaction[]; // ✅ ADDED
   isLoading: boolean;
   error: string | null;
 }
 
 const initialState: TransferState = {
   transferResult: null,
+  transactions: [], // ✅ ADDED
   isLoading: false,
   error: null,
 };
@@ -36,6 +40,9 @@ const transferSlice = createSlice({
     },
     clearTransfer: (state) => {
       state.transferResult = null;
+    },
+    clearTransactions: (state) => {
+      state.transactions = [];
     },
   },
 
@@ -59,13 +66,35 @@ const transferSlice = createSlice({
       )
       .addCase(performIntraBankTransfer.rejected, (state, action) => {
         state.isLoading = false;
-
         state.error =
           typeof action.payload === "string"
             ? action.payload
             : "Transfer failed";
-
         state.transferResult = null;
+      });
+
+    /** -----------------------------------------
+     * FETCH ACCOUNT TRANSACTIONS
+     * ----------------------------------------- */
+    builder
+      .addCase(fetchAccountTransactions.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(
+        fetchAccountTransactions.fulfilled,
+        (state, action: PayloadAction<AccountTransaction[]>) => {
+          state.isLoading = false;
+          state.transactions = action.payload;
+          state.error = null;
+        }
+      )
+      .addCase(fetchAccountTransactions.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error =
+          typeof action.payload === "string"
+            ? action.payload
+            : "Failed to fetch transactions";
       });
 
     /** -----------------------------------------
@@ -87,16 +116,16 @@ const transferSlice = createSlice({
       )
       .addCase(performInterBankTransfer.rejected, (state, action) => {
         state.isLoading = false;
-
         state.error =
           typeof action.payload === "string"
             ? action.payload
             : "Transfer failed";
-
         state.transferResult = null;
       });
   },
 });
 
-export const { clearError, clearTransfer } = transferSlice.actions;
+export const { clearError, clearTransfer, clearTransactions } =
+  transferSlice.actions;
+
 export default transferSlice.reducer;

@@ -30,7 +30,7 @@ const Success = () => {
         </Text>
 
         <Text className="text-accent-100 text-center text-base leading-relaxed mt-4">
-          Your bill payment was successful
+          Your payment was successful
         </Text>
       </View>
 

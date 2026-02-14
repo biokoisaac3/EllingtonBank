@@ -27,7 +27,11 @@ import CustomText from "@/app/components/CustomText";
 import { useAppDispatch } from "@/app/lib/hooks/useAppDispatch";
 import { useAppSelector } from "@/app/lib/hooks/useAppSelector";
 import { getBillerProviders, getPackages } from "@/app/lib/thunks/billsThunks";
-import { clearError } from "@/app/lib/slices/billsSlice";
+import {
+  clearError,
+  clearPackages,
+  clearProviders,
+} from "@/app/lib/slices/billsSlice";
 
 export default function InternetServicesPayment() {
   const router = useRouter();
@@ -46,7 +50,6 @@ export default function InternetServicesPayment() {
   const [accountId, setAccountId] = useState("");
   const [customAmount, setCustomAmount] = useState("");
 
-  // Contacts modal state
   const [contactsVisible, setContactsVisible] = useState(false);
   const [contacts, setContacts] = useState<Contacts.Contact[]>([]);
 
@@ -58,14 +61,22 @@ export default function InternetServicesPayment() {
 
   useEffect(() => {
     dispatch(clearError());
-  }, [dispatch]);
+    dispatch(clearProviders());
+    dispatch(clearPackages());
 
-  useEffect(() => {
+    setSelectedService("");
+    setSelectedProduct(""); 
+    setAccountId("");
+    setCustomAmount("");
+
     dispatch(getBillerProviders({ type: "internet" })).catch(() => {});
   }, [dispatch]);
 
   useEffect(() => {
     if (selectedService) {
+      dispatch(clearPackages());
+      setSelectedProduct(""); 
+      setCustomAmount(""); 
       dispatch(getPackages({ slug: selectedService })).catch(() => {});
     }
   }, [selectedService, dispatch]);
@@ -74,31 +85,7 @@ export default function InternetServicesPayment() {
     if (safeProviders.length && !selectedService) {
       setSelectedService(safeProviders[0].slug);
     }
-  }, [safeProviders, selectedService]);
-
-  useEffect(() => {
-    if (safePackages.length && !selectedProduct) {
-      setSelectedProduct(safePackages[0].slug);
-    }
-  }, [safePackages, selectedProduct]);
-
-  const serviceOptions = useMemo(
-    () =>
-      safeProviders.map((p) => ({
-        label: p.name,
-        value: p.slug,
-      })),
-    [safeProviders]
-  );
-
-  const productOptions = useMemo(
-    () =>
-      safePackages.map((p) => ({
-        label: p.name,
-        value: p.slug,
-      })),
-    [safePackages]
-  );
+  }, [safeProviders]);
 
   const selectedProviderData = useMemo(
     () => safeProviders.find((p) => p.slug === selectedService),
@@ -116,21 +103,17 @@ export default function InternetServicesPayment() {
   );
 
   const amount = useMemo(() => {
-    if (hasPackageAmount) {
-      return String(selectedPackageData?.amount ?? "");
-    }
+    if (hasPackageAmount) return String(selectedPackageData?.amount ?? "");
     return customAmount.replace(/,/g, "");
   }, [selectedPackageData, customAmount, hasPackageAmount]);
 
-  /* ---------------- Contacts Logic ---------------- */
-
+  /* ---------------- Contacts logic ---------------- */
   const openContacts = async () => {
     const { status } = await Contacts.requestPermissionsAsync();
     if (status === "granted") {
       const { data } = await Contacts.getContactsAsync({
         fields: [Contacts.Fields.PhoneNumbers],
       });
-
       if (data.length > 0) {
         setContacts(data);
         setContactsVisible(true);
@@ -139,13 +122,17 @@ export default function InternetServicesPayment() {
   };
 
   const selectContact = (contact: Contacts.Contact) => {
-    // Use name or phone as Account ID (same pattern as data page)
     const value = contact.phoneNumbers?.[0]?.number || contact.name || "";
     setAccountId(value);
     setContactsVisible(false);
   };
 
-  /* ------------------------------------------------ */
+  const isFormValid =
+    accountId &&
+    selectedService &&
+    selectedProduct &&
+    amount &&
+    Number(amount) >= 100;
 
   const handleContinue = () => {
     if (!selectedProviderData || !selectedPackageData || !accountId) return;
@@ -166,13 +153,6 @@ export default function InternetServicesPayment() {
       },
     });
   };
-
-  const isFormValid =
-    accountId &&
-    selectedService &&
-    selectedProduct &&
-    amount &&
-    Number(amount) >= 100;
 
   return (
     <SafeAreaView className="flex-1 bg-primary-100">
@@ -201,7 +181,10 @@ export default function InternetServicesPayment() {
 
                 <Dropdown
                   label="Select service item"
-                  options={serviceOptions}
+                  options={safeProviders.map((p) => ({
+                    label: p.name,
+                    value: p.slug,
+                  }))}
                   selectedValue={selectedService}
                   onSelect={setSelectedService}
                   searchable
@@ -209,7 +192,10 @@ export default function InternetServicesPayment() {
 
                 <Dropdown
                   label="Select product"
-                  options={productOptions}
+                  options={safePackages.map((p) => ({
+                    label: p.name,
+                    value: p.slug,
+                  }))}
                   selectedValue={selectedProduct}
                   onSelect={setSelectedProduct}
                   disabled={!selectedService || packagesStatus === "loading"}

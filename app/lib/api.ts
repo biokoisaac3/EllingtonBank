@@ -1,5 +1,8 @@
 // const BASE_URL = "http://3.220.216.48:3005/api/v2";
-const BASE_URL = "http://35.174.195.146:3005/api/v2";
+// const BASE_URL = "https://unvenial-uncomplaining-von.ngrok-free.dev/api/v2";
+// const BASE_URL = "https://api.ellingtonbank.com/api/v2";
+const BASE_URL = "https://stagingapi.ellingtonbank.com/api/v2";
+
 
 //users endpoint
 const REGISTER_USERS_ENDPOINT = `${BASE_URL}/users/register`;
@@ -30,6 +33,9 @@ const GET_USER_PROFILE_ENDPOINT = `${BASE_URL}/users/me`;
 const UPDATE_USER_PROFILE_ENDPOINT = `${BASE_URL}/users/me`;
 const UPDATE_USER_ADDRESS_PROFILE_ENDPOINT = `${BASE_URL}/users/address`;
 const UPDATE_USER_PROFILE_PASSWORD_ENDPOINT = `${BASE_URL}/users/profile/passport`;
+export const CHANGE_TRANSACTION_PIN_USERS_ENDPOINT =
+  `${BASE_URL}/users/change-transaction-pin`;
+
 
 //kyc
 const KYC_STATUS_ENDPOINT = `${BASE_URL}/kyc/status`;
@@ -50,6 +56,8 @@ const BENEFICIARIES_ENDPOINT = `${BASE_URL}/beneficiaries/transfer`;
 const BANKS_ENDPOINT = `${BASE_URL}/utilities/banks`;
 const TRANSFER_SAME_BANK = `${BASE_URL}/transfers/intra-bank`;
 const TRANSFER_OTHER_BANK = `${BASE_URL}/transfers/inter-bank`;
+export const FETCH_ACCOUNT_TRANSACTIONS = `${BASE_URL}/transactions/account`;
+
 
 //cards
 const CARD_INITIATE_PAYMENT_ENDPOINT = `${BASE_URL}/cards/initiate-payment`;
@@ -62,6 +70,43 @@ const BILLS_VALIDATE_CUSTOMER_ENDPOINT = `${BASE_URL}/bills/data/validate-custom
 const BILLS_PAY_ENDPOINT = `${BASE_URL}/bills/pay-bill`;
 const BILLS_PROVIDERS_ENDPOINT = `${BASE_URL}/bills/get-providers`;
 const BILLS_PACKAGES_ENDPOINT = `${BASE_URL}/bills/get-packages`;
+
+// virtual cards
+const VIRTUAL_CARD_REQUEST_ENDPOINT = `${BASE_URL}/virtual-cards/request`;
+const VIRTUAL_CARDS_FETCH_ALL_ENDPOINT = `${BASE_URL}/virtual-cards/customer/all`;
+const VIRTUAL_CARD_FETCH_ONE_ENDPOINT = (id: string) =>
+  `${BASE_URL}/virtual-cards/customer/card/${id}`;
+const VIRTUAL_CARD_FUND_ENDPOINT = `${BASE_URL}/virtual-cards/fund`;
+const VIRTUAL_CARD_WITHDRAW_ENDPOINT = `${BASE_URL}/virtual-cards/withdraw`;
+const VIRTUAL_CARD_FREEZE_ENDPOINT = (id: string) =>
+  `${BASE_URL}/virtual-cards/customer/card/${id}/freeze`;
+const VIRTUAL_CARD_UNFREEZE_ENDPOINT = (id: string) =>
+  `${BASE_URL}/virtual-cards/customer/card/${id}/unfreeze`;
+
+// loans
+const LOAN_PRODUCTS_ENDPOINT = `${BASE_URL}/loans/products`;
+const LOAN_COMMERCIAL_BANKS_ENDPOINT = `${BASE_URL}/loans/commercial-banks`;
+const LOAN_CREDIT_CHECK_ENDPOINT = `${BASE_URL}/loans/credit-check`;
+const LOAN_CALCULATE_ENDPOINT = `${BASE_URL}/loans/calculate`;
+const LOAN_APPLY_ENDPOINT = `${BASE_URL}/loans/apply`;
+const FETCH_USER_LOANS_ENDPOINT = `${BASE_URL}/loans`;
+const FETCH_SINGLE_LOAN_ENDPOINT = (id: string) =>
+  `${BASE_URL}/loans/${id}`;
+  
+const LOAN_DISBURSEMENT_WEBHOOK_ENDPOINT = `${BASE_URL}/webhooks/loans/disbursement`;
+
+const STATEMENTS_REQUEST_ENDPOINT = `${BASE_URL}/statements/request`;
+const STATEMENTS_HISTORY_ENDPOINT = (page?: number, limit?: number) => {
+  const params = new URLSearchParams();
+  if (page) params.set("page", String(page));
+  if (limit) params.set("limit", String(limit));
+  const q = params.toString();
+  return q ? `${BASE_URL}/statements?${q}` : `${BASE_URL}/statements`;
+};
+const STATEMENT_BY_ID_ENDPOINT = (id: string) => `${BASE_URL}/statements/${id}`;
+
+
+
 
 export {
   BASE_URL,
@@ -107,4 +152,22 @@ export {
   BILLS_PACKAGES_ENDPOINT,
   BILLS_PAY_ENDPOINT,
   BILLS_PROVIDERS_ENDPOINT,
+  VIRTUAL_CARD_REQUEST_ENDPOINT,
+  VIRTUAL_CARDS_FETCH_ALL_ENDPOINT,
+  VIRTUAL_CARD_FETCH_ONE_ENDPOINT,
+  VIRTUAL_CARD_FUND_ENDPOINT,
+  VIRTUAL_CARD_WITHDRAW_ENDPOINT,
+  VIRTUAL_CARD_FREEZE_ENDPOINT,
+  VIRTUAL_CARD_UNFREEZE_ENDPOINT,
+  LOAN_PRODUCTS_ENDPOINT,
+  LOAN_COMMERCIAL_BANKS_ENDPOINT,
+  LOAN_CREDIT_CHECK_ENDPOINT,
+  LOAN_CALCULATE_ENDPOINT,
+  LOAN_APPLY_ENDPOINT,
+  FETCH_USER_LOANS_ENDPOINT,
+  FETCH_SINGLE_LOAN_ENDPOINT,
+  LOAN_DISBURSEMENT_WEBHOOK_ENDPOINT,
+  STATEMENTS_REQUEST_ENDPOINT,
+  STATEMENTS_HISTORY_ENDPOINT,
+  STATEMENT_BY_ID_ENDPOINT,
 };

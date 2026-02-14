@@ -1,40 +1,38 @@
 {
   "expo": {
-    "name": "Ellingtonbank",
+    "name": "Ellington Personal Banking",
     "slug": "ellingtonbank",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
-    "icon": "./app/assets/logo.png",
+    "icon": "./app/assets/Logo2.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "ellingtonbank",
+      "bundleIdentifier": "com.ellingtonmfb.app",
+      "buildNumber": "21",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false,
-        "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true,
-          "NSExceptionDomains": {
-            "35.174.195.146:3005": {
-              "NSExceptionAllowsInsecureHTTPLoads": true
-            }
-          }
-        }
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
+
     "android": {
+      "package": "com.ellingtonmfb.app",
       "adaptiveIcon": {
-        "foregroundImage": "./app/assets/logo.png",
+        "foregroundImage": "./app/assets/Logo2.png",
         "backgroundColor": "#3F401B"
       },
-      "package": "com.bioko_isaac_dev.ellingtonbank"
+      "permissions": ["com.google.android.gms.permission.AD_ID"]
     },
+
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./app/assets/logo.png"
     },
+
     "plugins": [
       "expo-router",
       [
@@ -56,18 +54,24 @@
         "expo-build-properties",
         {
           "android": {
-            "usesCleartextTraffic": true
+            "ndkVersion": "26.1.10909125",
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "abiFilters": ["arm64-v8a"]
           }
         }
-      ]
+      ],
+      "./plugins/withAppsFlyerPreinstall"
     ],
+
     "experiments": {
       "typedRoutes": true
     },
+
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "d1510d16-c5d6-4f3b-9188-73b2422cc4f4"
+        "projectId": "2cb6bacc-1e05-4771-81c3-6a9934f26c7d"
       }
     }
   }

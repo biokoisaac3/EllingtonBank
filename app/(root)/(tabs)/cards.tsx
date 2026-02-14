@@ -1,3 +1,9 @@
+// app/(root)/(tabs)/cards.tsx
+// ✅ FULL CODE (fixed)
+// ✅ IMPORTANT FIX: user selector is INSIDE the component (no hooks at top-level)
+// ✅ More modal requires authorize first
+// ✅ Only ACTIVE virtual card is used
+
 import React, { useState, useEffect } from "react";
 import {
   ScrollView,
@@ -22,44 +28,90 @@ import BlockCardContent from "@/app/components/cards/lockCardContent";
 import FundWalletContent from "@/app/components/cards/FundWallet";
 import MoreInfoContent from "@/app/components/cards/MoreInfoContent";
 import images from "@/app/assets/images";
-import ChangePin from "@/app/components/cards/ChangePinContent";
-import CustomText from "@/app/components/CustomText";
-import Button from "@/app/components/Button";
 import CardActivation from "@/app/components/cards/CardActivation";
 import { fetchPhysicalCards, PhysicalCard } from "@/app/lib/thunks/cardsThunks";
+import {
+  fetchVirtualCards,
+  VirtualCardListItem,
+} from "@/app/lib/thunks/virtualCardsThunks";
 import { RootState, AppDispatch } from "@/app/lib/store";
+import { useAppSelector } from "@/app/lib/hooks/useAppSelector";
+
+const EMPTY_ARR: any[] = [];
+
+const selectPhysicalCards = (state: RootState) =>
+  state.cards.physicalCards ?? EMPTY_ARR;
+
+const selectVirtualCards = (state: RootState) => {
+  const cards = state.virtualCards?.cards;
+  return Array.isArray(cards) ? cards : EMPTY_ARR;
+};
+
+const selectVirtualLoading = (state: RootState) =>
+  state.virtualCards?.isLoading ?? false;
+
+const selectSelectedVirtualCard = (state: RootState) =>
+  state.virtualCards?.selectedCard ?? null;
 
 export default function Card() {
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+
+  // ✅ FIX: hook MUST be inside component
+  const user = useAppSelector((state) => state.auth.user);
+
+  const TAG = "[CARDS]";
+
   const [activeTab, setActiveTab] = useState("virtual");
   const [showCardDetails, setShowCardDetails] = useState(false);
+
   const [showWithdrawalSheet, setShowWithdrawalSheet] = useState(false);
   const [showFundSheet, setShowFundSheet] = useState(false);
   const [showBlockSheet, setShowBlockSheet] = useState(false);
-  const [showPinSheet, setShowPinSheet] = useState(false);
   const [showMore, setShowMore] = useState(false);
+
+  // ✅ remember what to do after authorize
+  const [pendingAction, setPendingAction] = useState<"more" | null>(null);
+
   const [amount, setAmount] = useState("");
-  const router = useRouter();
+  const [fundSource, setFundSource] = useState<string | null>(null);
 
-  const physicalCards: PhysicalCard[] = useSelector(
-    (state: RootState) => state.cards.physicalCards || []
-  );
+  const [withdrawalAmount, setWithdrawalAmount] = useState("");
 
-  const {
-    hasCardvirtual: queryHasCardvirtual,
-    isActivated: queryIsActivated,
-    selectedColor,
-  } = useLocalSearchParams();
+  const physicalCards: PhysicalCard[] = useSelector(selectPhysicalCards);
+  const virtualCards: VirtualCardListItem[] = useSelector(selectVirtualCards);
+  const virtualLoading = useSelector(selectVirtualLoading);
+  const selectedCard = useSelector(selectSelectedVirtualCard);
+
+  const { selectedColor } = useLocalSearchParams();
 
   const tabs: Tab[] = [
     { label: "Virtual Card", value: "virtual" },
     { label: "Physical Card", value: "physical" },
   ];
 
-  const hasCardvirtual = queryHasCardvirtual === "true";
   const hasCardphysical = physicalCards.length > 0;
-  const activeCard = physicalCards.find((card) => card.status === "Active");
-  const isActivated = !!activeCard;
+  const activePhysicalCard = physicalCards.find((c) => c.status === "Active");
+  const isActivated = !!activePhysicalCard;
+
+  // ✅ ONLY ACTIVE virtual card
+  const activeVirtualCard =
+    virtualCards.find((c) => c.status === "Active") ?? null;
+
+  const hasCardvirtual = !!activeVirtualCard;
+
+  // If details arrive (after authorize), keep switch ON
+  useEffect(() => {
+    if (selectedCard?.id) setShowCardDetails(true);
+  }, [selectedCard?.id]);
+
+  // ✅ If user wanted "more", open it after authorize is done
+  useEffect(() => {
+    if (pendingAction === "more" && selectedCard?.id) {
+      setShowMore(true);
+      setPendingAction(null);
+    }
+  }, [pendingAction, selectedCard?.id]);
 
   const selectedColorStr = Array.isArray(selectedColor)
     ? selectedColor[0]
@@ -77,19 +129,61 @@ export default function Card() {
 
   const cardImage = cardImageMap[(selectedColorStr as string) || "gold"];
 
+  // ✅ Fetch lists only
   useEffect(() => {
+    console.log(TAG, "fetchPhysicalCards()");
     dispatch(fetchPhysicalCards({}));
   }, [dispatch]);
 
   useEffect(() => {
-    if (hasCardphysical) {
-      setActiveTab("physical");
-    }
+    console.log(TAG, "fetchVirtualCards()");
+    dispatch(fetchVirtualCards());
+  }, [dispatch]);
+
+  // Debug logs
+  useEffect(() => {
+    console.log(
+      TAG,
+      "virtualCards:",
+      virtualCards.map((v) => ({ id: v.id, status: v.status }))
+    );
+  }, [virtualCards]);
+
+  useEffect(() => {
+    console.log(TAG, "activeVirtualCard:", activeVirtualCard);
+  }, [activeVirtualCard?.id]);
+
+  useEffect(() => {
+    console.log(TAG, "selectedCard(details):", selectedCard);
+  }, [selectedCard?.id]);
+
+  // Default tab based on physical
+  useEffect(() => {
+    if (hasCardphysical) setActiveTab("physical");
   }, [hasCardphysical]);
+
+  const handleToggleDetails = (val: boolean) => {
+    console.log(TAG, "Switch:", val);
+    setShowCardDetails(val);
+
+    if (!val) return;
+
+    if (activeVirtualCard?.id) {
+      router.push({
+        pathname: "/(root)/cards/authorize-details",
+        params: { cardId: activeVirtualCard.id, next: "details" },
+      });
+    }
+  };
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     setShowCardDetails(false);
+
+    if (tab === "virtual" && !virtualLoading) {
+      console.log(TAG, "refetchVirtualCards()");
+      dispatch(fetchVirtualCards());
+    }
   };
 
   const handleItemPress = (item: any) => {
@@ -97,36 +191,58 @@ export default function Card() {
       case "withdrawal":
         setShowWithdrawalSheet(true);
         break;
+
       case "fund":
         setShowFundSheet(true);
         break;
+
       case "block":
         setShowBlockSheet(true);
         break;
-      case "pin":
-        setShowPinSheet(true);
-        break;
+
       case "more":
-        setShowMore(true);
+        // ✅ AUTHORIZE BEFORE OPENING MODAL
+        if (selectedCard?.id) {
+          setShowMore(true);
+          return;
+        }
+
+        if (activeVirtualCard?.id) {
+          setPendingAction("more");
+          router.push({
+            pathname: "/(root)/cards/authorize-details",
+            params: { cardId: activeVirtualCard.id, next: "more" },
+          });
+        }
         break;
     }
   };
 
-  const handleConfirmWithdrawal = () => {
-    if (amount) {
-      router.push(`/(root)/send-money/authorize?amount=${amount}`);
-    }
+  const handleConfirmWithdrawal = async () => {
+    if (!withdrawalAmount || !activeVirtualCard?.id) return;
+
+    router.push({
+      pathname: "/(root)/withdraw/authorize",
+      params: { amount: withdrawalAmount, cardId: activeVirtualCard.id },
+    });
+
     setShowWithdrawalSheet(false);
-    setAmount("");
+    setWithdrawalAmount("");
   };
 
   const handleCloseWithdrawal = () => {
     setShowWithdrawalSheet(false);
-    setAmount("");
+    setWithdrawalAmount("");
   };
 
   const handleConfirmFund = () => {
-    router.push(`/(root)/fund-wallet/authorize?amount=${amount}`);
+    if (!amount || !fundSource) return;
+
+    router.push({
+      pathname: "/(root)/fund-wallet/authorize",
+      params: { amount, source: fundSource },
+    });
+
     setShowFundSheet(false);
     setAmount("");
   };
@@ -136,39 +252,14 @@ export default function Card() {
     setAmount("");
   };
 
-  const handleContinueFund = (reason: string) => {
-    console.log("Funding reason:", reason);
-  };
-
   const handleConfirmBlock = () => {
     router.push("/(root)/block-card/authorize");
     setShowBlockSheet(false);
   };
 
-  const handleCloseBlock = () => {
-    setShowBlockSheet(false);
-  };
+  const handleCloseBlock = () => setShowBlockSheet(false);
 
-  const handleContinueBlock = (reason: string) => {
-    console.log("Blocking reason:", reason);
-  };
-
-  const handleConfirmPin = () => {
-    router.push("/(root)/cards/physical-card/pin/authorize");
-    setShowPinSheet(false);
-  };
-
-  const handleClosePin = () => {
-    setShowPinSheet(false);
-  };
-
-  const handleContinuePin = (reason: string) => {
-    console.log("Change pin reason:", reason);
-  };
-
-  const handleCloseMore = () => {
-    setShowMore(false);
-  };
+  const handleCloseMore = () => setShowMore(false);
 
   return (
     <SafeAreaView className="flex-1 bg-primary-100 -mb-12">
@@ -192,19 +283,20 @@ export default function Card() {
                   activeTab="virtual"
                   showCardDetails={showCardDetails}
                 />
+
                 <CardSwitch
                   value={showCardDetails}
-                  onChange={setShowCardDetails}
+                  onChange={handleToggleDetails}
                 />
+
                 <CardActions onItemPress={handleItemPress} />
                 <TransactionHistory />
               </>
             ) : (
               <CardContent
                 buttonTitle="Request virtual card"
-                buttonRoute=""
-                // buttonRoute="/(root)/cards/virtual-card"
                 sectionTitle="Why a Virtual Card?"
+                cardType="virtual"
               />
             )
           ) : activeTab === "physical" ? (
@@ -233,8 +325,8 @@ export default function Card() {
             ) : (
               <CardContent
                 buttonTitle="Request physical card"
-                buttonRoute="/(root)/cards/physical-card"
                 sectionTitle="Track your physical card"
+                cardType="physical"
               />
             )
           ) : null}
@@ -248,7 +340,10 @@ export default function Card() {
         title="Withdraw Money"
         buttonText="Confirm"
       >
-        <WithdrawalContent amount={amount} setAmount={setAmount} />
+        <WithdrawalContent
+          amount={withdrawalAmount}
+          setAmount={setWithdrawalAmount}
+        />
       </BottomSheet>
 
       <BottomSheet
@@ -258,7 +353,13 @@ export default function Card() {
         title="Fund Wallet"
         buttonText="Top Up"
       >
-        <FundWalletContent amount={amount} setAmount={setAmount} />
+        <FundWalletContent
+          selectedSource={fundSource}
+          onSelectSource={setFundSource}
+          amount={amount}
+          setAmount={setAmount}
+          onClose={handleCloseFund}
+        />
       </BottomSheet>
 
       <BottomSheet
@@ -277,17 +378,7 @@ export default function Card() {
         title="Block Card"
         buttonText="Continue"
       >
-        <BlockCardContent onContinue={handleContinueBlock} />
-      </BottomSheet>
-
-      <BottomSheet
-        visible={showPinSheet}
-        onClose={handleClosePin}
-        onConfirm={handleConfirmPin}
-        title="Change Pin"
-        buttonText="Continue"
-      >
-        <ChangePin onContinue={handleContinuePin} />
+        <BlockCardContent onContinue={() => {}} />
       </BottomSheet>
     </SafeAreaView>
   );

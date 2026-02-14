@@ -26,6 +26,11 @@ import {
   getPackages,
   validateBillCustomer,
 } from "@/app/lib/thunks/billsThunks";
+import {
+  clearError,
+  clearPackages,
+  clearProviders,
+} from "@/app/lib/slices/billsSlice";
 
 export default function CablePayment() {
   const router = useRouter();
@@ -52,47 +57,47 @@ export default function CablePayment() {
     providersStatus === "loading" || packagesStatus === "loading";
 
   useEffect(() => {
+    dispatch(clearError());
+    dispatch(clearProviders());
+    dispatch(clearPackages());
+
+    setSelectedService("");
+    setSelectedProduct("");
+    setAmount("");
+    setAccountId("");
+
     dispatch(getBillerProviders({ type: "cable" })).catch(() => {});
   }, [dispatch]);
 
   useEffect(() => {
     if (selectedService) {
-      dispatch(getPackages({ slug: selectedService })).catch(() => {});
+      dispatch(clearPackages());
       setSelectedProduct("");
+      setAmount("");
+      dispatch(getPackages({ slug: selectedService })).catch(() => {});
     }
   }, [selectedService, dispatch]);
 
   useEffect(() => {
-    if (safeProviders.length && !selectedService)
+    if (safeProviders.length && !selectedService) {
       setSelectedService(safeProviders[0].slug);
-  }, [safeProviders, selectedService]);
-
-  useEffect(() => {
-    if (safePackages.length && !selectedProduct)
-      setSelectedProduct(safePackages[0].slug);
-  }, [safePackages, selectedProduct]);
-
-  const serviceOptions = safeProviders.map((p) => ({
-    label: p.name,
-    value: p.slug,
-  }));
-  const productOptions = safePackages.map((p) => ({
-    label: p.name,
-    value: p.slug,
-  }));
+    }
+  }, [safeProviders]);
 
   const selectedProviderData = useMemo(
     () => safeProviders.find((p) => p.slug === selectedService),
     [safeProviders, selectedService]
   );
+
   const selectedPackageData = useMemo(
     () => safePackages.find((p) => p.slug === selectedProduct),
     [safePackages, selectedProduct]
   );
 
   useEffect(() => {
-    if (selectedPackageData?.amount)
+    if (selectedPackageData?.amount) {
       setAmount(String(selectedPackageData.amount));
+    }
   }, [selectedPackageData]);
 
   const isFormValid =
@@ -133,12 +138,20 @@ export default function CablePayment() {
         },
       });
     } catch (err: any) {
-      console.log("Validation error:", err);
-      setError(err || "Validation failed");
+      setError(err?.message || "Validation failed");
     } finally {
       setIsLoading(false);
     }
   };
+
+  const serviceOptions = safeProviders.map((p) => ({
+    label: p.name,
+    value: p.slug,
+  }));
+  const productOptions = safePackages.map((p) => ({
+    label: p.name,
+    value: p.slug,
+  }));
 
   return (
     <SafeAreaView className="flex-1 bg-primary-100">

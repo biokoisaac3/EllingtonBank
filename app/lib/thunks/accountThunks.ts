@@ -32,7 +32,7 @@ export interface Bank {
   updated_at: string;
 }
 
-interface ApiResponse<T = any> {
+export interface ApiResponse<T = any> {
   status: string;
   success: boolean;
   data?: T;

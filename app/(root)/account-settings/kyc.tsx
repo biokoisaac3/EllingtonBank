@@ -1,13 +1,24 @@
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "@/app/components/header-back";
 import { useAppSelector } from "@/app/lib/hooks/useAppSelector";
 import CustomText from "@/app/components/CustomText";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 
 const kyc = () => {
   const { user } = useAppSelector((state) => state.auth);
+  const handleKycPress = () => {
+    // Handle KYC verification navigation or action here
+    if (user?.kyc_level === 1) {
+      //navigate to kyc level 2
+      router.push("/kyc");
+    } else if (user?.kyc_level === 2) {
+      router.push("/kyc/utility-bills");
+      return;
+    }
+  };
   return (
     <SafeAreaView className="bg-primary-100 flex-1 px-2">
       <Header title="KYC Level" />
@@ -22,7 +33,7 @@ const kyc = () => {
         </CustomText>
 
         <View className="flex-row items-center justify-between bg-primary-400 rounded-2xl p-4 mt-2">
-          <View>
+          <Pressable onPress={handleKycPress}>
             <CustomText>Complete your KYC verification</CustomText>
             <CustomText
               secondary
@@ -31,7 +42,7 @@ const kyc = () => {
             >
               To access all features it’s essential to verify your identity.
             </CustomText>
-          </View>
+          </Pressable>
           <Ionicons name="chevron-forward" size={20} color="#fff" />
         </View>
         <CustomText className="my-4">Level Benefit</CustomText>
