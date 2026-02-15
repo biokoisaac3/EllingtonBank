@@ -33,6 +33,7 @@ export const fetchGoldDashboard = createAsyncThunk<any, void>(
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log(res)
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
@@ -62,6 +63,8 @@ export const fetchGoldPrice = createAsyncThunk<any, void>(
           Authorization: `Bearer ${token}`,
         },
       });
+      // console.log(res);
+
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
@@ -93,6 +96,7 @@ export const fetchGoldPriceHistory = createAsyncThunk<any, { period?: string }>(
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log(res);
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
@@ -123,6 +127,8 @@ export const buyGold = createAsyncThunk<any, { amount_ngn?: number; amount_grams
         },
         body: JSON.stringify(payload),
       });
+      console.log(res);
+
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
@@ -153,6 +159,8 @@ export const sellGold = createAsyncThunk<any, { amount_ngn?: number; amount_gram
         },
         body: JSON.stringify(payload),
       });
+      console.log(res);
+
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
@@ -182,6 +190,8 @@ export const fetchGoldTransactions = createAsyncThunk<any, void>(
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log(res);
+
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
@@ -213,6 +223,8 @@ export const fetchGoldTransactionById = createAsyncThunk<any, { id: string }>(
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log(res);
+
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
@@ -242,6 +254,8 @@ export const fetchGoldSkr = createAsyncThunk<any, void>(
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log(res);
+
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
@@ -272,6 +286,8 @@ export const createGoldTrigger = createAsyncThunk<any, any>(
         },
         body: JSON.stringify(payload),
       });
+      console.log(res);
+
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
@@ -301,6 +317,8 @@ export const listGoldTriggers = createAsyncThunk<any, void>(
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log(res);
+
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
