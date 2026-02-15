@@ -24,6 +24,7 @@ export default function ServicesSection() {
     if (item.id === "7") router.push("/(root)/internet");
     // if (item.id === "8") router.push("/(root)/other-bills");
     if (item.id === "9") router.push("/(root)/loans");
+    if (item.id === "17") router.push("/(root)/gold/index");
   };
 
 
@@ -40,7 +41,7 @@ export default function ServicesSection() {
       />
       <WealthManagementSection
         items={wealthManagement}
-        // onItemPress={handleItemPress}
+        onItemPress={handleItemPress}
       />
     </View>
   );
