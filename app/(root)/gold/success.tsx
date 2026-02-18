@@ -14,7 +14,7 @@ export default function GoldSuccess() {
       <StatusBar barStyle="light-content" />
       <Header title="" />
 
-      <View className="flex-1 px-6 pt-12 items-center">
+      <View className="flex-1 px-6 pt-32 items-center">
         <Text className="text-5xl">🎉</Text>
         <Text className="text-white text-2xl font-outfit-bold mt-6">Your gold order is confirmed.</Text>
         <Text className="text-white mt-2">your transaction was successful</Text>
@@ -23,7 +23,7 @@ export default function GoldSuccess() {
           <Button
             title="Done"
             variant="primary"
-            onPress={() => router.replace({ pathname: "/(root)/gold/index" })}
+            onPress={() => router.replace({ pathname: "/(root)/gold" })}
             className="mb-4"
           />
 

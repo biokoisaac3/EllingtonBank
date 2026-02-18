@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StatusBar, Vibration } from "react-native";
+import { View, StatusBar, Vibration } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Header from "@/app/components/header-back";
 import OtpInput from "@/app/components/inputs/OtpInput";
 import Numpad from "@/app/components/inputs/Numpad";
 import Loading from "@/app/components/Loading";
+import CustomText from "@/app/components/CustomText"; 
 import { useAppDispatch } from "@/app/lib/hooks/useAppDispatch";
 import { buyGold } from "@/app/lib/thunks/goldThunks";
+
+const toNumber = (s: string) => Number((s || "").replace(/,/g, "")) || 0;
 
 export default function AuthorizeGold() {
   const params = useLocalSearchParams<Record<string, string>>();
@@ -24,18 +27,24 @@ export default function AuthorizeGold() {
 
     const t = setTimeout(() => {
       setLoading(true);
+      setError(false);
+      setErrorMessage("");
+
       const payload: any = {
-        amount_ngn: Number(params.amount || 0),
-        amount_grams: Number(params.grams || 0),
+        amount_ngn: toNumber(params.amountRaw || params.amount || "0"),
+        // amount_grams: Number(params.grams || 0),
         transaction_pin: passcode,
       };
 
       dispatch(buyGold(payload) as any)
         .unwrap()
-        .then((res) => {
-          router.replace({ pathname: "/(root)/gold/success", params: { amount: params.amount } });
+        .then(() => {
+          router.replace({
+            pathname: "/(root)/gold/success",
+            params: { amount: String(params.amount || "0") },
+          });
         })
-        .catch((err) => {
+        .catch((err: any) => {
           setError(true);
           setErrorMessage(err?.message || String(err) || "Transaction failed");
           Vibration.vibrate(400);
@@ -45,7 +54,14 @@ export default function AuthorizeGold() {
     }, 200);
 
     return () => clearTimeout(t);
-  }, [passcode]);
+  }, [
+    passcode,
+    dispatch,
+    router,
+    params.amount,
+    params.amountRaw,
+    params.grams,
+  ]);
 
   return (
     <SafeAreaView className="flex-1 bg-primary-100">
@@ -56,7 +72,9 @@ export default function AuthorizeGold() {
 
       <View className="flex-1 justify-between px-6 pb-12">
         <View className="mt-12">
-          <Text className="text-white text-base mb-8">Enter your PIN</Text>
+          <CustomText size="base" className="mb-8">
+            Enter your PIN
+          </CustomText>
 
           <OtpInput
             digitCount={4}
@@ -68,9 +86,15 @@ export default function AuthorizeGold() {
             inputStyle="w-20 h-20"
           />
 
-          {error && (
-            <Text className="text-red-500 text-sm mt-4">{errorMessage || "Transaction failed. Please try again."}</Text>
-          )}
+          {error ? (
+            <CustomText
+              className="text-red-500 mt-4 mb-0"
+              size="sm"
+              weight="medium"
+            >
+              {errorMessage || "Transaction failed. Please try again."}
+            </CustomText>
+          ) : null}
         </View>
 
         <Numpad
