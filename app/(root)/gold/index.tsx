@@ -40,8 +40,7 @@ export default function BuyGold() {
 
   const pricePerGramNgn = Number(gold?.price?.pricePerGramNgn || 0);
 
-  // ✅ BUY: grams = amount / pricePerGramNgn
-  // ✅ SELL: user enters grams directly
+  
   const grams = useMemo(() => {
     const a = toNumber(amount);
 
@@ -138,23 +137,21 @@ export default function BuyGold() {
             </Text>
           </View>
 
-          {/* Delivery address for withdraw */}
           {txType === "withdraw" && (
-            <View className="px-5 pb-4">
+            <View className=" pb-4">
               <Text className="text-white text-sm font-semibold mb-2">Delivery Address</Text>
               <TextInput
                 value={address}
                 onChangeText={setAddress}
                 placeholder="Enter delivery address"
                 placeholderTextColor="rgba(255,255,255,0.4)"
-                className="rounded-2xl bg-[#4a4a28] px-4 py-3 text-white"
+                className="rounded-2xl bg-[#4a4a28] px-4 py-6 text-white"
                 multiline
                 numberOfLines={2}
               />
             </View>
           )}
 
-          {/* Grams */}
           <Text className="text-white text-sm font-semibold mb-3">
             {txType === "sell" ? "Sell Grams" : "Buy Grams"}
           </Text>
@@ -185,7 +182,6 @@ export default function BuyGold() {
             router.push({
               pathname: "/gold/confirm-payment",
               params: {
-                // For withdraw we pass NGN equivalent as amount, and raw grams as amountRaw
                 amount: txType === "withdraw" ? String(Math.round(amountNgnForWithdraw)) : amount,
                 grams,
                 amountRaw: txType === "withdraw" ? String(Math.round(amountNgnForWithdraw)) : String(amountRaw),
