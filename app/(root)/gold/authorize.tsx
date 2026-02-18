@@ -8,7 +8,7 @@ import Numpad from "@/app/components/inputs/Numpad";
 import Loading from "@/app/components/Loading";
 import CustomText from "@/app/components/CustomText"; 
 import { useAppDispatch } from "@/app/lib/hooks/useAppDispatch";
-import { buyGold, sellGold } from "@/app/lib/thunks/goldThunks";
+import { buyGold, sellGold, withdrawGold } from "@/app/lib/thunks/goldThunks";
 
 const toNumber = (s: string) => Number((s || "").replace(/,/g, "")) || 0;
 
@@ -17,8 +17,9 @@ export default function AuthorizeGold() {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
-  const transactionType = params.type === "sell" ? "sell" : "buy";
+  const transactionType = params.type === "sell" ? "sell" : params.type === "withdraw" ? "withdraw" : "buy";
   const isSell = transactionType === "sell";
+  const isWithdraw = transactionType === "withdraw";
 
   const [passcode, setPasscode] = useState("");
   const [error, setError] = useState(false);
@@ -33,13 +34,16 @@ export default function AuthorizeGold() {
       setError(false);
       setErrorMessage("");
 
+      const baseAmountNgn = toNumber(params.amountRaw || params.amount || "0");
       const payload: any = {
-        amount_ngn: toNumber(params.amountRaw || params.amount || "0"),
-        // amount_grams: Number(params.grams || 0),
+        amount_ngn: baseAmountNgn,
         transaction_pin: passcode,
       };
 
-      const goldAction = isSell ? sellGold(payload) : buyGold(payload);
+      if (params.grams) payload.amount_grams = Number(params.grams || 0);
+      if (params.delivery_address) payload.delivery_address = params.delivery_address;
+
+      const goldAction = isWithdraw ? withdrawGold(payload) : isSell ? sellGold(payload) : buyGold(payload);
 
       dispatch(goldAction as any)
         .unwrap()

@@ -5,6 +5,7 @@ import {
   GOLD_PRICE_HISTORY_ENDPOINT,
   GOLD_BUY_ENDPOINT,
   GOLD_SELL_ENDPOINT,
+  GOLD_WITHDRAW_ENDPOINT,
   GOLD_TRANSACTIONS_ENDPOINT,
   GOLD_TRANSACTION_BY_ID_ENDPOINT,
   GOLD_TRIGGERS_ENDPOINT,
@@ -172,6 +173,37 @@ export const sellGold = createAsyncThunk<any, { amount_ngn?: number; amount_gram
       return data.data;
     } catch (error: any) {
       return rejectWithValue(error.message || "Sell gold error");
+    }
+  }
+);
+
+export const withdrawGold = createAsyncThunk<any, { amount_ngn?: number; amount_grams?: number; delivery_address?: string; transaction_pin: string }>(
+  "gold/withdraw",
+  async (payload, { rejectWithValue, getState }) => {
+    try {
+      const state = getState() as any;
+      const token = state.auth.token;
+
+      const res = await fetch(GOLD_WITHDRAW_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        return rejectWithValue(err?.data?.message || err?.message || `Withdraw failed (${res.status})`);
+      }
+
+      const data = (await res.json()) as ApiResponse<any>;
+      if (!data.success) return rejectWithValue(data.message || "Withdraw gold failed");
+      return data.data;
+    } catch (error: any) {
+      return rejectWithValue(error.message || "Withdraw gold error");
     }
   }
 );

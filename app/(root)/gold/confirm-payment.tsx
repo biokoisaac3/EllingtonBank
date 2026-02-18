@@ -129,8 +129,9 @@ export default function ConfirmPayment() {
   const params = useLocalSearchParams<Record<string, string>>();
   const router = useRouter();
 
-  const transactionType = params.type === "sell" ? "sell" : "buy";
-  const transactionTitle = transactionType === "sell" ? "Sell Gold" : "Buy Gold";
+  const transactionType = params.type === "sell" ? "sell" : params.type === "withdraw" ? "withdraw" : "buy";
+  const transactionTitle = transactionType === "sell" ? "Sell Gold" : transactionType === "withdraw" ? "Withdraw Gold" : "Buy Gold";
+  const deliveryAddress = params.delivery_address || "";
 
   const amountFormatted = params.amount || "0";
   const amountRaw = params.amountRaw || amountFormatted;
@@ -217,6 +218,7 @@ export default function ConfirmPayment() {
                   tax: String(tax),
                   goldValue: String(goldValue),
                   type: String(transactionType),
+                  delivery_address: deliveryAddress,
                 },
               })
             }

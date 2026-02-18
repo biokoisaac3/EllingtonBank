@@ -99,7 +99,7 @@ export default function GoldDashboard() {
               <ActionTile
                 label="Withdraw"
                 iconName="wallet-outline"
-                onPress={() => {}}
+                onPress={() => router.push({ pathname: "/gold", params: { type: "withdraw" } })}
               />
               <ActionTile
                 label="Gift"
