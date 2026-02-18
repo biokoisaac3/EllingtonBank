@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 import Loading from "@/app/components/Loading";
@@ -28,12 +28,16 @@ const money = (n: number, dp = 2) =>
 
 const toNumber = (s: string) => Number((s || "").replace(/,/g, "")) || 0;
 
-export default function BuyGold() {
+export default function GoldTransaction() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const gold = useAppSelector((s) => s.gold);
+  const { type } = useLocalSearchParams<{ type: string }>();
+  const gold = useAppSelector((s: any) => s.gold);
 
   const [amount, setAmount] = useState("");
+
+  const transactionType = type === "sell" ? "Sell" : "Buy";
+  const isSell = type === "sell";
 
   useEffect(() => {
     dispatch(fetchGoldPrice());
@@ -43,9 +47,14 @@ export default function BuyGold() {
 
   const grams = useMemo(() => {
     const a = toNumber(amount);
+    if (isSell) {
+      // For selling, input is grams
+      return a.toFixed(2);
+    }
+    // For buying, calculate grams from amount
     if (!pricePerGramNgn || a <= 0) return "0.00";
     return (a / pricePerGramNgn).toFixed(2);
-  }, [amount, pricePerGramNgn]);
+  }, [amount, pricePerGramNgn, isSell]);
 
   const liveUsd = Number(gold?.price?.pricePerGramUsd || 0);
   const changeUsd = Number(gold?.price?.changeUsd || 0);
@@ -56,7 +65,7 @@ export default function BuyGold() {
     <SafeAreaView className="flex-1 bg-[#3a3a1a]">
       <StatusBar barStyle="light-content" />
       <Loading visible={gold.isLoading} />
-      <Header title="Buy Gold" showCancel />
+      <Header title={`${transactionType} Gold`} showCancel />
 
      
         <ScrollView
@@ -94,14 +103,14 @@ export default function BuyGold() {
             </View>
 
             <Text className="text-white text-sm font-semibold mb-3">
-              Buy Amount
+              {isSell ? "Sell" : "Buy"} Amount
             </Text>
 
             <AmountInput
               value={amount}
               onChange={setAmount}
-              placeholder="75,000"
-              sign="₦"
+              placeholder={isSell ? "Enter grams to sell" : "75,000"}
+              sign={isSell ? "" : "₦"}
               onChangeValue={(n) => console.log("raw:", n)}
             />
 
@@ -112,12 +121,12 @@ export default function BuyGold() {
                 color="rgba(255,255,255,0.7)"
               />
               <Text className="text-white/70 text-xs ml-2">
-                Minimum amount should be ₦ value equivalent of $100
+                {isSell ? "Minimum grams to sell: 0.01" : "Minimum amount should be ₦ value equivalent of $100"}
               </Text>
             </View>
 
             <Text className="text-white text-sm font-semibold mb-3">
-              Buy Grams
+              {isSell ? "Sell Grams" : "Buy Grams"}
             </Text>
             <View
               className={`rounded-3xl border border-[#6a6a3a] bg-[#4a4a28] flex-row items-center ${
@@ -142,7 +151,7 @@ export default function BuyGold() {
             onPress={() => {
               router.push({
                 pathname: "/gold/confirm-payment",
-                params: { amount, grams, amountRaw: String(toNumber(amount)) },
+                params: { amount, grams, amountRaw: String(toNumber(amount)), type },
               });
             }}
           />

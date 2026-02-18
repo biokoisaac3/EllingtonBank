@@ -8,7 +8,7 @@ import Numpad from "@/app/components/inputs/Numpad";
 import Loading from "@/app/components/Loading";
 import CustomText from "@/app/components/CustomText"; 
 import { useAppDispatch } from "@/app/lib/hooks/useAppDispatch";
-import { buyGold } from "@/app/lib/thunks/goldThunks";
+import { buyGold, sellGold } from "@/app/lib/thunks/goldThunks";
 
 const toNumber = (s: string) => Number((s || "").replace(/,/g, "")) || 0;
 
@@ -16,6 +16,9 @@ export default function AuthorizeGold() {
   const params = useLocalSearchParams<Record<string, string>>();
   const router = useRouter();
   const dispatch = useAppDispatch();
+
+  const transactionType = params.type === "sell" ? "sell" : "buy";
+  const isSell = transactionType === "sell";
 
   const [passcode, setPasscode] = useState("");
   const [error, setError] = useState(false);
@@ -36,12 +39,17 @@ export default function AuthorizeGold() {
         transaction_pin: passcode,
       };
 
-      dispatch(buyGold(payload) as any)
+      const goldAction = isSell ? sellGold(payload) : buyGold(payload);
+
+      dispatch(goldAction as any)
         .unwrap()
         .then(() => {
           router.replace({
             pathname: "/(root)/gold/success",
-            params: { amount: String(params.amount || "0") },
+            params: { 
+              amount: String(params.amount || "0"),
+              type: String(transactionType),
+            },
           });
         })
         .catch((err: any) => {
@@ -61,6 +69,8 @@ export default function AuthorizeGold() {
     params.amount,
     params.amountRaw,
     params.grams,
+    isSell,
+    transactionType,
   ]);
 
   return (

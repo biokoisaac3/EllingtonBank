@@ -129,6 +129,9 @@ export default function ConfirmPayment() {
   const params = useLocalSearchParams<Record<string, string>>();
   const router = useRouter();
 
+  const transactionType = params.type === "sell" ? "sell" : "buy";
+  const transactionTitle = transactionType === "sell" ? "Sell Gold" : "Buy Gold";
+
   const amountFormatted = params.amount || "0";
   const amountRaw = params.amountRaw || amountFormatted;
   const gramsParam = params.grams || "0";
@@ -147,7 +150,7 @@ export default function ConfirmPayment() {
   return (
     <SafeAreaView className="flex-1 bg-primary-100">
       <StatusBar barStyle="light-content" />
-      <Header title="Confirm payment" />
+      <Header title={`Confirm ${transactionTitle.toLowerCase()}`} />
 
       <View className="flex-1 px-6 pt-6">
         <View className="mb-4">
@@ -202,7 +205,7 @@ export default function ConfirmPayment() {
 
         <View className="flex-1 justify-end pb-8">
           <Button
-            title="Buy Gold"
+            title={transactionTitle}
             variant="primary"
             onPress={() =>
               router.push({
@@ -213,6 +216,7 @@ export default function ConfirmPayment() {
                   amountRaw: String(amount),
                   tax: String(tax),
                   goldValue: String(goldValue),
+                  type: String(transactionType),
                 },
               })
             }

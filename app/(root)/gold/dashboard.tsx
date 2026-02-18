@@ -89,12 +89,12 @@ export default function GoldDashboard() {
               <ActionTile
                 label="Buy"
                 iconName="cart-outline"
-                onPress={() => {}}
+                onPress={() => router.push({ pathname: "/gold", params: { type: "buy" } })}
               />
               <ActionTile
                 label="Sell"
                 iconName="pricetag-outline"
-                onPress={() => {}}
+                onPress={() => router.push({ pathname: "/gold", params: { type: "sell" } })}
               />
               <ActionTile
                 label="Withdraw"
