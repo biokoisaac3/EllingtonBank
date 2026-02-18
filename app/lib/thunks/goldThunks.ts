@@ -190,7 +190,6 @@ export const fetchGoldTransactions = createAsyncThunk<any, void>(
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log(res);
 
 
       if (!res.ok) {
@@ -200,7 +199,7 @@ export const fetchGoldTransactions = createAsyncThunk<any, void>(
 
       const data = (await res.json()) as ApiResponse<any>;
       if (!data.success) return rejectWithValue(data.message || "Gold transactions fetch failed");
-      return data.data;
+      return data.data.transactions;
     } catch (error: any) {
       return rejectWithValue(error.message || "Gold transactions error");
     }
@@ -223,7 +222,6 @@ export const fetchGoldTransactionById = createAsyncThunk<any, { id: string }>(
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log(res);
 
 
       if (!res.ok) {

@@ -201,15 +201,7 @@ export default function TransactionDetail() {
             </>
           )}
 
-          {/* Action Button */}
-          <Pressable
-            onPress={() => router.back()}
-            className="bg-[#5A5B1F] rounded-2xl px-5 py-4 items-center mb-3"
-          >
-            <CustomText size="base" weight="bold" className="text-white">
-              Go Back
-            </CustomText>
-          </Pressable>
+      
         </View>
       </ScrollView>
     </SafeAreaView>
