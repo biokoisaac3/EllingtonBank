@@ -59,7 +59,7 @@ const wealthManagement: ServiceItem[] = [
   { id: "14", icon: SERVICE_ICONS.groupSavings, label: "Group savings" },
   { id: "15", icon: SERVICE_ICONS.fixedDeposit, label: "Fixed deposit" },
   { id: "16", icon: SERVICE_ICONS.shares, label: "Buy shares" },
-  { id: "17", icon: SERVICE_ICONS.gold, label: "Buy gold" },
+  { id: "17", icon: SERVICE_ICONS.gold, label: "Gold" },
 ];
 
 const utilityserviceItems = [
