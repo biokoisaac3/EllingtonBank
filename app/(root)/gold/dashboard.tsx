@@ -104,7 +104,17 @@ export default function GoldDashboard() {
               <ActionTile
                 label="Gift"
                 iconName="gift-outline"
-                onPress={() => {}}
+                onPress={() =>
+                  router.push({
+                    pathname: "/(root)/transfer",
+                    params: {
+                      gift: "true",
+                      // pass current wallet values as defaults
+                      amount_grams: String(wallet?.balance_grams ?? 0),
+                      amount: String(Math.round(wallet?.current_value_ngn ?? 0)),
+                    },
+                  })
+                }
               />
             </View>
           </View>
