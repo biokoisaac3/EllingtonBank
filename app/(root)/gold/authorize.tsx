@@ -40,7 +40,23 @@ export default function AuthorizeGold() {
         transaction_pin: passcode,
       };
 
-      if (params.grams) payload.amount_grams = Number(params.grams || 0);
+      const gramsVal = Number(params.grams || 0);
+
+      // Only include `amount_grams` for non-sell flows (buy/withdraw may include grams).
+      // Backend requires exactly one of amount_ngn or amount_grams — don't send both for sell.
+      if (!isSell && params.grams) {
+        if (gramsVal > 1000) {
+          setError(true);
+          setErrorMessage("Amount in grams cannot exceed 1,000");
+          Vibration.vibrate(400);
+          setPasscode("");
+          setLoading(false);
+          return;
+        }
+
+        payload.amount_grams = gramsVal;
+      }
+
       if (params.delivery_address) payload.delivery_address = params.delivery_address;
 
       const goldAction = isWithdraw ? withdrawGold(payload) : isSell ? sellGold(payload) : buyGold(payload);
