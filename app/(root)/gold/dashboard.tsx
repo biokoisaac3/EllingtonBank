@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Pressable, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -6,12 +6,32 @@ import { Ionicons } from "@expo/vector-icons";
 
 import CustomText from "@/app/components/CustomText";
 import Header from "@/app/components/header-back";
+import { useAppDispatch } from "@/app/lib/hooks/useAppDispatch";
+import { useAppSelector } from "@/app/lib/hooks/useAppSelector";
+import {
+  fetchGoldDashboard,
+  fetchGoldTransactions,
+} from "@/app/lib/thunks/goldThunks";
 
 export default function GoldDashboard() {
   const router = useRouter();
   const [hidden, setHidden] = useState(false);
+  const dispatch = useAppDispatch();
 
-  const grams = "50.00";
+  const { dashboard, transactions, isLoading } = useAppSelector(
+    (state: any) => state.gold
+  );
+
+  useEffect(() => {
+    dispatch(fetchGoldDashboard());
+    dispatch(fetchGoldTransactions());
+  }, [dispatch]);
+
+  const wallet = dashboard?.wallet;
+  const livePrice = dashboard?.live_price;
+  const skr = dashboard?.skr;
+
+  const grams = wallet ? wallet.balance_grams.toFixed(2) : "0.00";
   const unit = "Gram";
 
   return (
@@ -47,19 +67,19 @@ export default function GoldDashboard() {
             <View className="mt-4 flex-row justify-between">
               <View>
                 <CustomText size="sm" className="text-white/60">
-                  Gram
+                  Balance (Grams)
                 </CustomText>
                 <CustomText size="lg" weight="bold" className="text-white">
-                  {hidden ? "••••" : "20.10"}
+                  {hidden ? "••••" : grams}
                 </CustomText>
               </View>
 
               <View className="items-end">
                 <CustomText size="sm" className="text-white/60">
-                  Total Fund
+                  Current Value
                 </CustomText>
                 <CustomText size="lg" weight="bold" className="text-white">
-                  {hidden ? "••••••" : "₦80,000"}
+                  {hidden ? "••••••" : `₦${wallet?.current_value_ngn.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`}
                 </CustomText>
               </View>
             </View>
@@ -112,80 +132,72 @@ export default function GoldDashboard() {
 
           {/* Total Invested */}
           <CustomText size="lg" weight="bold" className="text-white mt-8 mb-3">
-            Total Invested gold
+            Investment Summary
           </CustomText>
 
           {/* List Rows */}
           <View className="bg-[#5A5B1F] rounded-3xl overflow-hidden">
             <InvestedRow
-              title="Gold"
-              subtitle="7.56gm"
-              rightTop="₦490.84"
-              rightBottom="+$80.20 (3.25%)"
-              rightBottomPositive
-              iconName="sparkles-outline"
+              title="Total Invested"
+              subtitle={`₦${wallet?.total_invested_ngn.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`}
+              rightTop={`₦${wallet?.current_value_ngn.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`}
+              rightBottom={`${wallet?.profit_loss_percent >= 0 ? "+" : ""}${wallet?.profit_loss_percent || 0}% (₦${wallet?.profit_loss_ngn.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"})`}
+              rightBottomPositive={wallet?.profit_loss_ngn >= 0}
+              iconName="bar-chart-outline"
             />
 
             <View className="h-[1px] bg-white/10" />
 
             <InvestedRow
               title="Live Gold Price"
-              subtitle="-$2.20 (-0.52%)"
-              rightTop="₦390.84"
-              rightBottom="↑"
-              rightBottomPositive
+              subtitle={`₦${livePrice?.price_per_gram_ngn.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}/gram`}
+              rightTop={`$${livePrice?.price_per_toz_usd.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`}
+              rightBottom={`${livePrice?.change_percent >= 0 ? "+" : ""}${livePrice?.change_percent || 0}% ($${livePrice?.change_usd.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"})`}
+              rightBottomPositive={livePrice?.change_percent >= 0}
               iconName="stats-chart-outline"
+            />
+
+            <View className="h-[1px] bg-white/10" />
+
+            <InvestedRow
+              title="SGR Certificate"
+              subtitle={`Weight: ${skr?.weight_grams.toFixed(8) || "0"} grams`}
+              rightTop={`₦${skr?.current_valuation_ngn.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`}
+              rightBottom={skr?.storage_location || "Dubai Vault"}
+              rightBottomPositive
+              iconName="shield-outline"
             />
           </View>
 
           {/* History */}
           <CustomText size="lg" weight="bold" className="text-white mt-8 mb-3">
-            History
+            Recent Transactions
           </CustomText>
 
-          <HistoryGroup
-            date="Sun 23 Nov, 2025"
-            items={[
-              {
-                id: "1",
-                type: "Top up",
-                from: "From debit card",
-                amount: "+10,000",
-                amountPositive: true,
-                totalBal: "₦20,000",
-              },
-              {
-                id: "2",
-                type: "Withdrawal",
-                from: "To bank account",
-                amount: "-10,000",
-                amountPositive: false,
-                totalBal: "₦20,000",
-              },
-            ]}
-          />
-
-          <HistoryGroup
-            date="Sun 23 Nov, 2025"
-            items={[
-              {
-                id: "3",
-                type: "Top up",
-                from: "From bank account",
-                amount: "+10,000",
-                amountPositive: true,
-                totalBal: "₦20,000",
-              },
-              {
-                id: "4",
-                type: "Withdrawal",
-                from: "To bank account",
-                amount: "-10,000",
-                amountPositive: false,
-                totalBal: "₦20,000",
-              },
-            ]}
-          />
+          {transactions && transactions.length > 0 ? (
+            <View className="gap-3">
+              {transactions.slice(0, 5).map((transaction: any) => (
+                <Pressable
+                  key={transaction.id}
+                  onPress={() => router.push(`/gold/transactions/${transaction.id}`)}
+                >
+                  <HistoryItem
+                    id={transaction.id}
+                    type={transaction.type === "buy" ? "Gold Purchase" : transaction.type === "sell" ? "Gold Sale" : "Transfer"}
+                    from={`Ref: ${transaction.reference}`}
+                    amount={transaction.type === "buy" ? `-₦${parseFloat(transaction.amount_ngn).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `+₦${parseFloat(transaction.amount_ngn).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    amountPositive={transaction.type === "sell"}
+                    amountGrams={`${parseFloat(transaction.amount_grams).toFixed(8)} grams`}
+                    date={new Date(transaction.created_at).toLocaleDateString("en-NG")}
+                  />
+                </Pressable>
+              ))}
+            </View>
+          ) : (
+            <CustomText size="base" className="text-white/60 text-center py-6">
+              No transactions yet
+            </CustomText>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -264,52 +276,27 @@ function InvestedRow({
   );
 }
 
-function HistoryGroup({
-  date,
-  items,
-}: {
-  date: string;
-  items: {
-    id: string;
-    type: string;
-    from: string;
-    amount: string;
-    amountPositive: boolean;
-    totalBal: string;
-  }[];
-}) {
-  return (
-    <View className="mb-5">
-      <CustomText size="xs" className="text-white/60 mb-3">
-        {date}
-      </CustomText>
-
-      <View className="gap-3">
-        {items.map((it) => (
-          <HistoryItem key={it.id} {...it} />
-        ))}
-      </View>
-    </View>
-  );
-}
-
 function HistoryItem({
+  id,
   type,
   from,
   amount,
   amountPositive,
-  totalBal,
+  amountGrams,
+  date,
 }: {
+  id?: string;
   type: string;
   from: string;
   amount: string;
   amountPositive: boolean;
-  totalBal: string;
+  amountGrams?: string;
+  date?: string;
 }) {
   const amountColor = amountPositive ? "text-green-400" : "text-red-400";
   const iconName: keyof typeof Ionicons.glyphMap = amountPositive
-    ? "arrow-up-outline"
-    : "arrow-down-outline";
+    ? "arrow-down-outline"
+    : "arrow-up-outline";
 
   return (
     <View className="bg-[#5A5B1F] rounded-2xl px-5 py-4">
@@ -326,21 +313,21 @@ function HistoryItem({
             <CustomText size="xs" className="text-white/60 mt-1">
               {from}
             </CustomText>
+            {amountGrams && (
+              <CustomText size="xs" className="text-white/50 mt-1">
+                {amountGrams}
+              </CustomText>
+            )}
+            {date && (
+              <CustomText size="xs" className="text-white/50 mt-1">
+                {date}
+              </CustomText>
+            )}
           </View>
         </View>
 
         <CustomText size="base" weight="bold" className={amountColor}>
           {amount}
-        </CustomText>
-      </View>
-
-      <View className="mt-3 flex-row justify-end">
-        <CustomText size="xs" className="text-white/60">
-          Total Bal.:
-          <CustomText size="xs" weight="bold" className="text-white/80">
-            {" "}
-            {totalBal}
-          </CustomText>
         </CustomText>
       </View>
     </View>
