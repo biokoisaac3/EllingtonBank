@@ -1,5 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, StatusBar, Platform, ScrollView, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  StatusBar,
+  Platform,
+  ScrollView,
+  TextInput,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,12 +33,17 @@ export default function BuyGold() {
   const dispatch = useAppDispatch();
   const gold = useAppSelector((s: any) => s.gold);
 
-  // get type from route params (default buy)
   const { type } = useLocalSearchParams<{ type?: string }>();
-  const txType = type === "sell" ? "sell" : type === "withdraw" ? "withdraw" : "buy";
-  const title = txType === "sell" ? "Sell Gold" : txType === "withdraw" ? "Withdraw Gold" : "Buy Gold";
+  const txType =
+    type === "sell" ? "sell" : type === "withdraw" ? "withdraw" : "buy";
+  const title =
+    txType === "sell"
+      ? "Sell Gold"
+      : txType === "withdraw"
+      ? "Withdraw Gold"
+      : "Buy Gold";
 
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(""); // ✅ always NGN for buy/sell/withdraw now
   const [address, setAddress] = useState("");
 
   useEffect(() => {
@@ -40,33 +52,31 @@ export default function BuyGold() {
 
   const pricePerGramNgn = Number(gold?.price?.pricePerGramNgn || 0);
 
-  
+  // ✅ grams is always derived from NGN for buy/sell/withdraw
   const grams = useMemo(() => {
     const a = toNumber(amount);
-
-    if (txType === "sell") return a > 0 ? a.toFixed(2) : "0.00";
-
     if (!pricePerGramNgn || a <= 0) return "0.00";
     return (a / pricePerGramNgn).toFixed(2);
-  }, [amount, pricePerGramNgn, txType]);
+  }, [amount, pricePerGramNgn]);
 
   const liveUsd = Number(gold?.price?.pricePerGramUsd || 0);
   const changeUsd = Number(gold?.price?.changeUsd || 0);
   const changePct = Number(gold?.price?.changePercent || 0);
   const isUp = changeUsd >= 0;
 
-  // compute raw amounts: for buy amountRaw is NGN, for sell/withdraw amountRaw is grams
-  const amountRaw = toNumber(amount);
-  const amountNgnForWithdraw = txType === "withdraw" ? amountRaw * Number(gold?.price?.pricePerGramNgn || 0) : 0;
+  const amountRaw = toNumber(amount); // ✅ NGN
 
-  // ✅ minimum buy amount = 10,000
+  // ✅ minimums (edit these if you want different)
   const minBuy = 10000;
+  const minSell = 100; // NGN
+  const minWithdraw = 100; // NGN
+
   const canContinue =
-    txType === "sell"
-      ? amountRaw >= 0.01
-      : txType === "withdraw"
-      ? amountRaw >= 0.01 && address.trim().length > 3
-      : amountRaw >= minBuy;
+    txType === "buy"
+      ? amountRaw >= minBuy
+      : txType === "sell"
+      ? amountRaw >= minSell
+      : amountRaw >= minWithdraw && address.trim().length > 3;
 
   return (
     <SafeAreaView className="flex-1 bg-[#3a3a1a]">
@@ -110,15 +120,13 @@ export default function BuyGold() {
           </View>
 
           {/* Amount */}
-          <Text className="text-white text-sm font-semibold mb-3">
-            {txType === "sell" ? "Sell Amount (grams)" : "Buy Amount"}
-          </Text>
+          <Text className="text-white text-sm font-semibold mb-3">Amount</Text>
 
           <AmountInput
             value={amount}
             onChange={setAmount}
-            placeholder={txType === "sell" ? "Enter grams to sell" : "10,000"}
-            sign={txType === "sell" ? "" : "₦"}
+            placeholder={txType === "buy" ? "10,000" : "Enter amount"}
+            sign="₦"
             onChangeValue={(n) => console.log("raw:", n)}
           />
 
@@ -129,17 +137,20 @@ export default function BuyGold() {
               color="rgba(255,255,255,0.7)"
             />
             <Text className="text-white/70 text-xs ml-2">
-              {txType === "sell"
-                ? "Minimum grams to sell: 0.01"
-                : txType === "withdraw"
-                ? "Minimum grams to withdraw: 0.01 — delivery address required"
-                : "Minimum amount is ₦10,000"}
+              {txType === "buy"
+                ? "Minimum amount is ₦10,000"
+                : txType === "sell"
+                ? "Enter the naira amount you want to sell"
+                : "Enter the naira amount you want to withdraw — delivery address required"}
             </Text>
           </View>
 
+          {/* Address for withdraw */}
           {txType === "withdraw" && (
-            <View className=" pb-4">
-              <Text className="text-white text-sm font-semibold mb-2">Delivery Address</Text>
+            <View className="pb-4">
+              <Text className="text-white text-sm font-semibold mb-2">
+                Delivery Address
+              </Text>
               <TextInput
                 value={address}
                 onChangeText={setAddress}
@@ -152,8 +163,13 @@ export default function BuyGold() {
             </View>
           )}
 
+          {/* Grams */}
           <Text className="text-white text-sm font-semibold mb-3">
-            {txType === "sell" ? "Sell Grams" : "Buy Grams"}
+            {txType === "sell"
+              ? "Sell Grams"
+              : txType === "withdraw"
+              ? "Withdraw Grams"
+              : "Buy Grams"}
           </Text>
 
           <View
@@ -182,9 +198,9 @@ export default function BuyGold() {
             router.push({
               pathname: "/gold/confirm-payment",
               params: {
-                amount: txType === "withdraw" ? String(Math.round(amountNgnForWithdraw)) : amount,
-                grams,
-                amountRaw: txType === "withdraw" ? String(Math.round(amountNgnForWithdraw)) : String(amountRaw),
+                amount, // ✅ NGN (what user typed)
+                amountRaw: String(amountRaw), // ✅ NGN raw
+                grams, // ✅ computed grams for backend
                 type: txType,
                 delivery_address: txType === "withdraw" ? address : undefined,
               },

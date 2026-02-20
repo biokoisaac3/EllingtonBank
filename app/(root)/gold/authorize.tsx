@@ -6,7 +6,7 @@ import Header from "@/app/components/header-back";
 import OtpInput from "@/app/components/inputs/OtpInput";
 import Numpad from "@/app/components/inputs/Numpad";
 import Loading from "@/app/components/Loading";
-import CustomText from "@/app/components/CustomText"; 
+import CustomText from "@/app/components/CustomText";
 import { useAppDispatch } from "@/app/lib/hooks/useAppDispatch";
 import { buyGold, sellGold, withdrawGold } from "@/app/lib/thunks/goldThunks";
 
@@ -17,7 +17,12 @@ export default function AuthorizeGold() {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
-  const transactionType = params.type === "sell" ? "sell" : params.type === "withdraw" ? "withdraw" : "buy";
+  const transactionType =
+    params.type === "sell"
+      ? "sell"
+      : params.type === "withdraw"
+      ? "withdraw"
+      : "buy";
   const isSell = transactionType === "sell";
   const isWithdraw = transactionType === "withdraw";
 
@@ -35,16 +40,18 @@ export default function AuthorizeGold() {
       setErrorMessage("");
 
       const baseAmountNgn = toNumber(params.amountRaw || params.amount || "0");
+      const gramsVal = Number(params.grams || 0);
+
+      // IMPORTANT: backend requires exactly ONE of amount_ngn or amount_grams
+      // Decide which one to send based on whether grams is a valid > 0 number.
+      const hasGrams = Number.isFinite(gramsVal) && gramsVal > 0;
+
       const payload: any = {
-        amount_ngn: baseAmountNgn,
         transaction_pin: passcode,
       };
 
-      const gramsVal = Number(params.grams || 0);
-
-      // Only include `amount_grams` for non-sell flows (buy/withdraw may include grams).
-      // Backend requires exactly one of amount_ngn or amount_grams — don't send both for sell.
-      if (!isSell && params.grams) {
+      // If grams is provided (>0), send amount_grams only. Otherwise send amount_ngn only.
+      if (hasGrams) {
         if (gramsVal > 1000) {
           setError(true);
           setErrorMessage("Amount in grams cannot exceed 1,000");
@@ -53,20 +60,26 @@ export default function AuthorizeGold() {
           setLoading(false);
           return;
         }
-
         payload.amount_grams = gramsVal;
+      } else {
+        payload.amount_ngn = baseAmountNgn;
       }
 
-      if (params.delivery_address) payload.delivery_address = params.delivery_address;
+      if (params.delivery_address)
+        payload.delivery_address = params.delivery_address;
 
-      const goldAction = isWithdraw ? withdrawGold(payload) : isSell ? sellGold(payload) : buyGold(payload);
+      const goldAction = isWithdraw
+        ? withdrawGold(payload)
+        : isSell
+        ? sellGold(payload)
+        : buyGold(payload);
 
       dispatch(goldAction as any)
         .unwrap()
         .then(() => {
           router.replace({
             pathname: "/(root)/gold/success",
-            params: { 
+            params: {
               amount: String(params.amount || "0"),
               type: String(transactionType),
             },
@@ -89,7 +102,9 @@ export default function AuthorizeGold() {
     params.amount,
     params.amountRaw,
     params.grams,
+    params.delivery_address,
     isSell,
+    isWithdraw,
     transactionType,
   ]);
 

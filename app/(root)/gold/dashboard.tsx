@@ -121,7 +121,7 @@ export default function GoldDashboard() {
 
           {/* Trigger Card */}
           <Pressable
-            onPress={() => {}}
+            onPress={() => router.push("/gold/trigger")}
             className="mt-5 bg-[#5A5B1F] rounded-3xl p-5 flex-row items-center justify-between"
           >
             <View className="flex-1 pr-4">
